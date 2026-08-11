@@ -4,7 +4,6 @@ type HeadingLevel = "h1" | "h2" | "h3" | "h4";
 
 interface HeadingProps extends React.HTMLAttributes<HTMLHeadingElement> {
   as?: HeadingLevel;
-  level?: HeadingLevel;
 }
 
 const headingStyles: Record<HeadingLevel, string> = {
@@ -14,11 +13,10 @@ const headingStyles: Record<HeadingLevel, string> = {
   h4: "text-base font-semibold",
 };
 
-function Heading({ as, level, className, children, ...props }: HeadingProps) {
-  const tag = as ?? level ?? "h2";
-  const Tag = tag as HeadingLevel;
+function Heading({ as = "h2", className, children, ...props }: HeadingProps) {
+  const Tag = as;
   return (
-    <Tag className={cn(headingStyles[tag], className)} {...props}>
+    <Tag className={cn(headingStyles[as], className)} {...props}>
       {children}
     </Tag>
   );

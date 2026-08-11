@@ -10,9 +10,11 @@ interface DialogProps {
   onClose: () => void;
   children: React.ReactNode;
   className?: string;
+  /** The `id` of the DialogTitle element, used for aria-labelledby */
+  titleId?: string;
 }
 
-function Dialog({ open, onClose, children, className }: DialogProps) {
+function Dialog({ open, onClose, children, className, titleId }: DialogProps) {
   React.useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -27,6 +29,7 @@ function Dialog({ open, onClose, children, className }: DialogProps) {
     <div
       role="dialog"
       aria-modal="true"
+      aria-labelledby={titleId}
       className="fixed inset-0 z-50 flex items-center justify-center"
     >
       {/* Backdrop */}
