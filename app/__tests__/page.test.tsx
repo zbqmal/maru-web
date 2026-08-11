@@ -1,16 +1,14 @@
-import { render, screen } from "@testing-library/react";
+import { redirect } from "next/navigation";
+import { render } from "@testing-library/react";
 import Home from "../page";
 
-describe("Home page", () => {
-  it("renders the app name", () => {
-    render(<Home />);
-    expect(screen.getByRole("heading", { name: /maru/i })).toBeInTheDocument();
-  });
+jest.mock("next/navigation", () => ({
+  redirect: jest.fn(),
+}));
 
-  it("renders the tagline", () => {
+describe("Home page", () => {
+  it("redirects to /diary", () => {
     render(<Home />);
-    expect(
-      screen.getByText(/a private space to share daily moments/i)
-    ).toBeInTheDocument();
+    expect(redirect).toHaveBeenCalledWith("/diary");
   });
 });
