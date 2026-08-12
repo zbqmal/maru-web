@@ -33,8 +33,3 @@
 - Add Playwright test foundation.
 - Add GitHub Actions for install, lint, test, and build.
 - Document required frontend environment variables.
-
-### Frontend Environment Variables
-
-- `NEXT_PUBLIC_API_URL` (required): Base URL of the separately deployed NestJS API.
-- `PLAYWRIGHT_BASE_URL` (optional): Base URL override for Playwright E2E runs.

@@ -84,7 +84,7 @@ export const apiRequest = async <TResponse>(path: string, options: ApiRequestOpt
   const data = await parseResponseData(response);
 
   if (!response.ok) {
-    throw new ApiError(getErrorMessage("요청 처리에 실패했어요.", data), response.status, data);
+    throw new ApiError(getErrorMessage("Failed to process request.", data), response.status, data);
   }
 
   return data as TResponse;
