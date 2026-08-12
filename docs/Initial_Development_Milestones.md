@@ -29,6 +29,7 @@ This file is intended to live in both the frontend and backend repositories so t
 - App Router
 - Tailwind CSS
 - shadcn/ui or equivalent reusable component primitives
+- Initial UI design references in `public/design`
 - TanStack Query for server state
 - Minimal client-side global state only where necessary
 
