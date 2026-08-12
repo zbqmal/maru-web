@@ -1,8 +1,8 @@
-# Our Daily — Development Milestones
+# MARU — Development Milestones
 
 ## 1. Purpose
 
-This document defines the shared frontend and backend implementation roadmap for **Our Daily**, a private group diary platform where family members and friends can stay connected by answering a small set of daily questions, sharing photos, and interacting with each other's entries.
+This document defines the shared frontend and backend implementation roadmap for **MARU**, a private group diary platform where family members and friends can stay connected by answering a small set of daily questions, sharing photos, and interacting with each other's entries.
 
 This file is intended to live in both the frontend and backend repositories so that both codebases follow the same product milestones and implementation order.
 
