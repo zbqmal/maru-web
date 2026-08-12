@@ -16,8 +16,12 @@ describe("createQueryClient", () => {
     const retry = queryClient.getDefaultOptions().queries?.retry;
 
     expect(typeof retry).toBe("function");
-    expect(retry?.(0, new ApiError("bad request", 400, null))).toBe(false);
-    expect(retry?.(0, new Error("network error"))).toBe(true);
-    expect(retry?.(2, new Error("network error"))).toBe(false);
+    if (typeof retry !== "function") {
+      throw new Error("retry option should be a function");
+    }
+
+    expect(retry(0, new ApiError("bad request", 400, null))).toBe(false);
+    expect(retry(0, new Error("network error"))).toBe(true);
+    expect(retry(2, new Error("network error"))).toBe(false);
   });
 });

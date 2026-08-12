@@ -2,6 +2,28 @@ import { apiRequest } from "@/lib/api/client";
 
 describe("apiRequest", () => {
   const originalFetch = global.fetch;
+  const createMockResponse = ({
+    ok,
+    status,
+    contentType,
+    jsonData,
+    textData,
+  }: {
+    ok: boolean;
+    status: number;
+    contentType: string;
+    jsonData?: unknown;
+    textData?: string;
+  }) =>
+    ({
+      ok,
+      status,
+      headers: {
+        get: (header: string) => (header === "content-type" ? contentType : null),
+      },
+      json: async () => jsonData,
+      text: async () => textData ?? "",
+    }) as unknown as Response;
 
   beforeEach(() => {
     process.env.NEXT_PUBLIC_API_URL = "http://localhost:3001";
@@ -13,11 +35,11 @@ describe("apiRequest", () => {
   });
 
   it("sends credentialed requests and returns JSON data", async () => {
-    const mockResponse = new Response(JSON.stringify({ ok: true }), {
+    const mockResponse = createMockResponse({
+      ok: true,
       status: 200,
-      headers: {
-        "content-type": "application/json",
-      },
+      contentType: "application/json",
+      jsonData: { ok: true },
     });
 
     (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
@@ -32,11 +54,11 @@ describe("apiRequest", () => {
   });
 
   it("serializes object body to JSON", async () => {
-    const mockResponse = new Response(JSON.stringify({ id: 1 }), {
+    const mockResponse = createMockResponse({
+      ok: true,
       status: 201,
-      headers: {
-        "content-type": "application/json",
-      },
+      contentType: "application/json",
+      jsonData: { id: 1 },
     });
 
     (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
@@ -55,11 +77,11 @@ describe("apiRequest", () => {
   });
 
   it("throws ApiError with message from API response", async () => {
-    const mockResponse = new Response(JSON.stringify({ message: ["A", "B"] }), {
+    const mockResponse = createMockResponse({
+      ok: false,
       status: 400,
-      headers: {
-        "content-type": "application/json",
-      },
+      contentType: "application/json",
+      jsonData: { message: ["A", "B"] },
     });
 
     (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
