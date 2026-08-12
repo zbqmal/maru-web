@@ -2,16 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { Bell, ChevronDown, LogOut, User } from "lucide-react";
-import { Avatar } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
+import Avatar from "@/components/ui/avatar";
+import UserMenuItem from "./user-menu-item";
 
 // Placeholder data – will be replaced by auth context / API in a later PR
 const MOCK_USER = { displayName: "나", avatarUrl: null };
 const MOCK_GROUP = { name: "우리 넷", memberCount: 4, avatarUrl: null };
 
-export function TopNav() {
+const TopNav = () => {
   const router = useRouter();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
@@ -64,8 +63,18 @@ export function TopNav() {
                 aria-hidden="true"
               />
               <div className="absolute right-0 z-20 mt-2 w-40 rounded-xl border border-border bg-surface py-1 shadow-lg">
-                <UserMenuItem href="/profile" icon={User} label="프로필" onClick={() => setUserMenuOpen(false)} />
-                <UserMenuItem href="/settings/notifications" icon={Bell} label="알림 설정" onClick={() => setUserMenuOpen(false)} />
+                <UserMenuItem
+                  href="/profile"
+                  icon={User}
+                  label="프로필"
+                  onClick={() => setUserMenuOpen(false)}
+                />
+                <UserMenuItem
+                  href="/settings/notifications"
+                  icon={Bell}
+                  label="알림 설정"
+                  onClick={() => setUserMenuOpen(false)}
+                />
                 <hr className="my-1 border-border" />
                 <button
                   onClick={() => {
@@ -85,29 +94,6 @@ export function TopNav() {
       </div>
     </header>
   );
-}
+};
 
-function UserMenuItem({
-  href,
-  icon: Icon,
-  label,
-  onClick,
-}: {
-  href: string;
-  icon: React.FC<{ className?: string }>;
-  label: string;
-  onClick?: () => void;
-}) {
-  return (
-    <Link
-      href={href}
-      onClick={onClick}
-      className={cn(
-        "flex items-center gap-2.5 px-4 py-2 text-sm text-foreground hover:bg-surface-muted",
-      )}
-    >
-      <Icon className="h-4 w-4 text-muted-foreground" />
-      {label}
-    </Link>
-  );
-}
+export default TopNav;

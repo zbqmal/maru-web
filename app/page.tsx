@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 
-export default function Home() {
+const Home = () => {
   redirect("/diary");
   return null;
-}
+};
+
+export default Home;

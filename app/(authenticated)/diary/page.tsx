@@ -1,6 +1,6 @@
-import { EmptyState } from "@/components/ui/empty-state";
+import EmptyState from "@/components/ui/empty-state";
 
-export default function DiaryPage() {
+const DiaryPage = () => {
   return (
     <div>
       <h1 className="mb-1 text-xl font-bold">오늘의 다이어리</h1>
@@ -12,4 +12,6 @@ export default function DiaryPage() {
       />
     </div>
   );
-}
+};
+
+export default DiaryPage;

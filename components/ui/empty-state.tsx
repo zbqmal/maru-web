@@ -7,20 +7,10 @@ interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
   action?: React.ReactNode;
 }
 
-function EmptyState({
-  icon,
-  title,
-  description,
-  action,
-  className,
-  ...props
-}: EmptyStateProps) {
+const EmptyState = ({ icon, title, description, action, className, ...props }: EmptyStateProps) => {
   return (
     <div
-      className={cn(
-        "flex flex-col items-center justify-center gap-3 py-16 text-center",
-        className,
-      )}
+      className={cn("flex flex-col items-center justify-center gap-3 py-16 text-center", className)}
       {...props}
     >
       {icon && (
@@ -29,12 +19,10 @@ function EmptyState({
         </span>
       )}
       <p className="text-base font-semibold text-foreground">{title}</p>
-      {description && (
-        <p className="max-w-xs text-sm text-muted-foreground">{description}</p>
-      )}
+      {description && <p className="max-w-xs text-sm text-muted-foreground">{description}</p>}
       {action && <div className="mt-2">{action}</div>}
     </div>
   );
-}
+};
 
-export { EmptyState };
+export default EmptyState;

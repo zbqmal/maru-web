@@ -6,7 +6,7 @@ import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export function LoginForm() {
+const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -52,11 +52,7 @@ export function LoginForm() {
                 aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
                 className="cursor-pointer"
               >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             }
           />
@@ -68,7 +64,10 @@ export function LoginForm() {
             <input type="checkbox" className="accent-primary" />
             로그인 상태 유지
           </label>
-          <Link href="/forgot-password" className="text-sm font-medium text-primary hover:underline">
+          <Link
+            href="/forgot-password"
+            className="text-sm font-medium text-primary hover:underline"
+          >
             비밀번호 찾기
           </Link>
         </div>
@@ -96,9 +95,11 @@ export function LoginForm() {
       </form>
     </div>
   );
-}
+};
 
-function GoogleIcon() {
+export default LoginForm;
+
+const GoogleIcon = () => {
   return (
     <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
       <path
@@ -119,12 +120,12 @@ function GoogleIcon() {
       />
     </svg>
   );
-}
+};
 
-function AppleIcon() {
+const AppleIcon = () => {
   return (
     <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true">
       <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.4c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.53 3.99zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
     </svg>
   );
-}
+};

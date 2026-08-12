@@ -1,6 +1,6 @@
-import { EmptyState } from "@/components/ui/empty-state";
+import EmptyState from "@/components/ui/empty-state";
 
-export default function CalendarPage() {
+const CalendarPage = () => {
   return (
     <div>
       <h1 className="mb-1 text-xl font-bold">달력 보기</h1>
@@ -14,4 +14,6 @@ export default function CalendarPage() {
       />
     </div>
   );
-}
+};
+
+export default CalendarPage;

@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/ui/error-state";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import EmptyState from "@/components/ui/empty-state";
+import ErrorState from "@/components/ui/error-state";
 
 describe("LoadingSpinner", () => {
   it("renders with default label", () => {
@@ -18,20 +18,14 @@ describe("LoadingSpinner", () => {
 describe("EmptyState", () => {
   it("renders title and description", () => {
     render(
-      <EmptyState
-        icon="📖"
-        title="아직 기록이 없어요"
-        description="첫 번째 기록을 남겨보세요."
-      />,
+      <EmptyState icon="📖" title="아직 기록이 없어요" description="첫 번째 기록을 남겨보세요." />
     );
     expect(screen.getByText("아직 기록이 없어요")).toBeInTheDocument();
     expect(screen.getByText("첫 번째 기록을 남겨보세요.")).toBeInTheDocument();
   });
 
   it("renders action slot", () => {
-    render(
-      <EmptyState title="비어있음" action={<button>시작하기</button>} />,
-    );
+    render(<EmptyState title="비어있음" action={<button>시작하기</button>} />);
     expect(screen.getByRole("button", { name: "시작하기" })).toBeInTheDocument();
   });
 });

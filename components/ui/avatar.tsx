@@ -1,5 +1,5 @@
-import * as React from "react";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   src?: string | null;
@@ -14,8 +14,8 @@ const sizeMap = {
   lg: "h-12 w-12 text-base",
 };
 
-function Avatar({ src, alt, fallback, size = "default", className, ...props }: AvatarProps) {
-  const [imgError, setImgError] = React.useState(false);
+const Avatar = ({ src, alt, fallback, size = "default", className, ...props }: AvatarProps) => {
+  const [imgError, setImgError] = useState(false);
   const show = src && !imgError;
 
   return (
@@ -25,7 +25,7 @@ function Avatar({ src, alt, fallback, size = "default", className, ...props }: A
       className={cn(
         "relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-accent font-medium text-accent-foreground",
         sizeMap[size],
-        className,
+        className
       )}
       {...props}
     >
@@ -42,6 +42,6 @@ function Avatar({ src, alt, fallback, size = "default", className, ...props }: A
       )}
     </div>
   );
-}
+};
 
-export { Avatar };
+export default Avatar;

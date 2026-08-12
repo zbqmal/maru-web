@@ -1,17 +1,15 @@
 import type { Metadata } from "next";
-import { LoginForm } from "./login-form";
+import LoginForm from "./login-form";
 
-export const metadata: Metadata = { title: "로그인 — Our Daily" };
+export const metadata: Metadata = { title: "로그인 — MARU" };
 
-export default function LoginPage() {
+const LoginPage = () => {
   return (
     <div className="flex min-h-screen">
       {/* Left panel — branding */}
       <div className="hidden w-2/5 flex-col justify-between bg-[#e8ddd0] p-10 lg:flex">
         <div>
-          <p className="text-2xl font-bold text-foreground">
-            Our Daily <span className="text-red-400">♥</span>
-          </p>
+          <p className="text-2xl font-bold text-foreground">MARU</p>
           <p className="mt-1 text-sm text-muted-foreground">우리의 하루를, 함께</p>
         </div>
         <div className="mb-8">
@@ -31,9 +29,11 @@ export default function LoginPage() {
           <LoginForm />
         </div>
         <footer className="absolute bottom-4 text-xs text-muted-foreground">
-          © 2024 Our Daily. All rights reserved.
+          © 2026 MARU. All rights reserved.
         </footer>
       </div>
     </div>
   );
-}
+};
+
+export default LoginPage;

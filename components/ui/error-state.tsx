@@ -8,20 +8,17 @@ interface ErrorStateProps extends React.HTMLAttributes<HTMLDivElement> {
   onRetry?: () => void;
 }
 
-function ErrorState({
+const ErrorState = ({
   title = "오류가 발생했어요",
   description = "잠시 후 다시 시도해 주세요.",
   onRetry,
   className,
   ...props
-}: ErrorStateProps) {
+}: ErrorStateProps) => {
   return (
     <div
       role="alert"
-      className={cn(
-        "flex flex-col items-center justify-center gap-3 py-16 text-center",
-        className,
-      )}
+      className={cn("flex flex-col items-center justify-center gap-3 py-16 text-center", className)}
       {...props}
     >
       <span className="flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
@@ -36,6 +33,6 @@ function ErrorState({
       )}
     </div>
   );
-}
+};
 
-export { ErrorState };
+export default ErrorState;

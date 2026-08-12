@@ -13,16 +13,16 @@ const headingStyles: Record<HeadingLevel, string> = {
   h4: "text-base font-semibold",
 };
 
-function Heading({ as = "h2", className, children, ...props }: HeadingProps) {
+const Heading = ({ as = "h2", className, children, ...props }: HeadingProps) => {
   const Tag = as;
   return (
     <Tag className={cn(headingStyles[as], className)} {...props}>
       {children}
     </Tag>
   );
-}
+};
 
-function Text({
+const Text = ({
   className,
   muted = false,
   small = false,
@@ -30,17 +30,17 @@ function Text({
 }: React.HTMLAttributes<HTMLParagraphElement> & {
   muted?: boolean;
   small?: boolean;
-}) {
+}) => {
   return (
     <p
       className={cn(
         small ? "text-xs" : "text-sm",
         muted ? "text-muted-foreground" : "text-foreground",
-        className,
+        className
       )}
       {...props}
     />
   );
-}
+};
 
 export { Heading, Text };

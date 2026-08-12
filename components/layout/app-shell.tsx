@@ -1,11 +1,11 @@
-import { Sidebar } from "./sidebar";
-import { TopNav } from "./top-nav";
+import Sidebar from "./sidebar";
+import TopNav from "./top-nav";
 
 interface AppShellProps {
   children: React.ReactNode;
 }
 
-export function AppShell({ children }: AppShellProps) {
+const AppShell = ({ children }: AppShellProps) => {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
       <Sidebar />
@@ -15,4 +15,6 @@ export function AppShell({ children }: AppShellProps) {
       </div>
     </div>
   );
-}
+};
+
+export default AppShell;

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, CalendarDays, HelpCircle, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Avatar } from "@/components/ui/avatar";
+import Avatar from "@/components/ui/avatar";
 
 const NAV_ITEMS = [
   { href: "/diary", label: "오늘의 다이어리", icon: Home },
@@ -23,7 +23,7 @@ const MOCK_GROUP = {
   ],
 };
 
-export function Sidebar() {
+const Sidebar = () => {
   const pathname = usePathname();
 
   return (
@@ -31,9 +31,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="px-5 pt-6 pb-4">
         <Link href="/diary" className="block">
-          <p className="text-lg font-bold text-foreground">
-            Our Daily <span className="text-red-400">♥</span>
-          </p>
+          <p className="text-lg font-bold text-foreground">MARU</p>
           <p className="text-xs text-muted-foreground">우리의 하루를, 함께</p>
         </Link>
       </div>
@@ -50,7 +48,7 @@ export function Sidebar() {
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 active
                   ? "bg-primary-light text-accent-foreground"
-                  : "text-muted-foreground hover:bg-surface-muted hover:text-foreground",
+                  : "text-muted-foreground hover:bg-surface-muted hover:text-foreground"
               )}
               aria-current={active ? "page" : undefined}
             >
@@ -96,4 +94,6 @@ export function Sidebar() {
       </div>
     </aside>
   );
-}
+};
+
+export default Sidebar;

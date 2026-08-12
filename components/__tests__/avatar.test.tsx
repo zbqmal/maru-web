@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { Avatar } from "@/components/ui/avatar";
+import Avatar from "@/components/ui/avatar";
 
 describe("Avatar", () => {
   it("renders fallback initial when no src", () => {
@@ -14,9 +14,6 @@ describe("Avatar", () => {
     const imgs = screen.getAllByRole("img", { name: "프로필" });
     // The outer container div is the first match
     const container = imgs[0] as HTMLElement;
-    expect(container.querySelector("img")).toHaveAttribute(
-      "src",
-      "https://example.com/avatar.jpg",
-    );
+    expect(container.querySelector("img")).toHaveAttribute("src", "https://example.com/avatar.jpg");
   });
 });
