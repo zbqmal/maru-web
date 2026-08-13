@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "api-contract:sync": "node ./scripts/sync-api-contract.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
