@@ -5,7 +5,7 @@ export interface AuthUser {
   email: string;
   name: string;
   birthday: string | null;
-  profileImageKey: object | null;
+  profileImageKey: Record<string, unknown> | null;
   createdAt: string;
   updatedAt: string;
 }
