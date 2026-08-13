@@ -36,6 +36,7 @@
 - Do not add dependencies unless they are clearly necessary.
 - Keep API/server state in TanStack Query rather than duplicating it in global client state.
 - Add or update tests for meaningful behavior changes.
+- When `maru-api` updates `docs/api-contracts`, run `yarn api-contract:sync` and keep `docs/api-contracts` checked in here.
 
 # Frontend Implementation PR Guidelines (Not Planning PR)
 
