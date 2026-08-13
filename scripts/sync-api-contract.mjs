@@ -48,6 +48,6 @@ const isEntrypoint = process.argv[1] === fileURLToPath(import.meta.url);
 if (isEntrypoint) {
   syncApiContracts().catch((error) => {
     console.error(error);
-    process.exitCode = 1;
+    process.exit(1);
   });
 }
