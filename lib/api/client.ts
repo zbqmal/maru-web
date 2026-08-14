@@ -1,6 +1,6 @@
 import { ApiError } from "@/lib/api/errors";
 
-type RequestBody = BodyInit | Record<string, unknown> | unknown[] | null;
+type RequestBody = BodyInit | object | null;
 
 type ApiRequestOptions = Omit<RequestInit, "body" | "credentials"> & {
   body?: RequestBody;
