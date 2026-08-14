@@ -3,10 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { login } from "@/lib/api/auth";
+import { CURRENT_USER_QUERY_KEY } from "@/lib/auth/session";
 import { getErrorMessage } from "@/lib/api/errors";
 
 interface FieldErrors {
@@ -29,6 +31,7 @@ const validateLoginForm = (email: string, password: string): FieldErrors => {
 
 const LoginForm = () => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -46,7 +49,8 @@ const LoginForm = () => {
 
     setIsSubmitting(true);
     try {
-      await login({ email, password });
+      const currentUser = await login({ email, password });
+      queryClient.setQueryData(CURRENT_USER_QUERY_KEY, currentUser);
       router.push("/diary");
     } catch (err) {
       setServerError(getErrorMessage(err));
