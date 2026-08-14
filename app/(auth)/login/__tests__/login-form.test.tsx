@@ -4,9 +4,11 @@ import userEvent from "@testing-library/user-event";
 import LoginForm from "../login-form";
 
 const mockPush = jest.fn();
+const mockSearchParamsGet = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
+  useSearchParams: () => ({ get: mockSearchParamsGet }),
 }));
 
 jest.mock("@/lib/api/auth", () => ({
@@ -34,6 +36,7 @@ const renderLoginForm = () => {
 describe("LoginForm", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockSearchParamsGet.mockReturnValue(null);
   });
 
   it("renders email, password fields and submit button", () => {
@@ -101,6 +104,29 @@ describe("LoginForm", () => {
       await screen.findByText("이메일 또는 비밀번호가 올바르지 않습니다.")
     ).toBeInTheDocument();
     expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it("redirects to the requested next path after login", async () => {
+    const user = userEvent.setup();
+    mockSearchParamsGet.mockImplementation((key: string) => (key === "next" ? "/profile" : null));
+    mockLogin.mockResolvedValueOnce({
+      id: "1",
+      email: "user@example.com",
+      name: "User",
+      birthday: null,
+      profileImageKey: null,
+      createdAt: "",
+      updatedAt: "",
+    });
+
+    renderLoginForm();
+    await user.type(screen.getByLabelText("이메일"), "user@example.com");
+    await user.type(screen.getByLabelText("비밀번호"), "password");
+    await user.click(screen.getByRole("button", { name: "로그인" }));
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith("/profile");
+    });
   });
 
   it("disables submit button while submitting", async () => {

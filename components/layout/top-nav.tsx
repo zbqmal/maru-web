@@ -23,8 +23,7 @@ const TopNav = ({ currentUser }: { currentUser: AuthUser }) => {
     onSuccess: async () => {
       setUserMenuOpen(false);
       setLogoutError(null);
-      queryClient.setQueryData(CURRENT_USER_QUERY_KEY, null);
-      await queryClient.invalidateQueries({ queryKey: CURRENT_USER_QUERY_KEY });
+      queryClient.removeQueries({ queryKey: CURRENT_USER_QUERY_KEY });
       router.replace("/login");
       router.refresh();
     },

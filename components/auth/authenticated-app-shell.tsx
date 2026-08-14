@@ -11,14 +11,15 @@ const AuthenticatedAppShell = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const pathname = usePathname();
   const { data: currentUser, isLoading, isError, refetch } = useCurrentUserQuery();
+  const shouldRedirect = !isLoading && !isError && !currentUser;
 
   useEffect(() => {
-    if (!isLoading && !isError && !currentUser) {
+    if (shouldRedirect) {
       router.replace(`/login?next=${encodeURIComponent(pathname)}`);
     }
-  }, [currentUser, isError, isLoading, pathname, router]);
+  }, [pathname, router, shouldRedirect]);
 
-  if (isLoading || (!isError && !currentUser)) {
+  if (isLoading || shouldRedirect) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-6">
         <LoadingSpinner label="세션을 확인하는 중..." className="py-0" />
@@ -36,6 +37,14 @@ const AuthenticatedAppShell = ({ children }: { children: React.ReactNode }) => {
             void refetch();
           }}
         />
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-6">
+        <LoadingSpinner label="세션을 확인하는 중..." className="py-0" />
       </div>
     );
   }

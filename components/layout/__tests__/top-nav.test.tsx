@@ -57,7 +57,7 @@ describe("TopNav", () => {
 
     await user.click(screen.getByRole("button", { name: "사용자 메뉴" }));
 
-    expect(screen.getByText("홍길동")).toBeInTheDocument();
+    expect(screen.getAllByText("홍길동")).toHaveLength(2);
     expect(screen.getByText("user@example.com")).toBeInTheDocument();
   });
 

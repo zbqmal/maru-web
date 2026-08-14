@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ const validateLoginForm = (email: string, password: string): FieldErrors => {
 
 const LoginForm = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -51,7 +52,8 @@ const LoginForm = () => {
     try {
       const currentUser = await login({ email, password });
       queryClient.setQueryData(CURRENT_USER_QUERY_KEY, currentUser);
-      router.push("/diary");
+      const nextPath = searchParams.get("next");
+      router.push(nextPath && nextPath.startsWith("/") ? nextPath : "/diary");
     } catch (err) {
       setServerError(getErrorMessage(err));
     } finally {

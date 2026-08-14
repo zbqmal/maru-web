@@ -13,19 +13,18 @@ const NAV_ITEMS = [
   { href: "/questions", label: "질문 설정하기", icon: HelpCircle },
 ];
 
-const getPlaceholderGroup = (currentUser: AuthUser) => ({
-  name: "우리 넷",
-  members: [
-    { id: currentUser.id, displayName: currentUser.name, avatarUrl: null, isSelf: true },
-    { id: "2", displayName: "다연", avatarUrl: null, isSelf: false },
-    { id: "3", displayName: "민수", avatarUrl: null, isSelf: false },
-    { id: "4", displayName: "지우", avatarUrl: null, isSelf: false },
-  ],
-});
+const PLACEHOLDER_MEMBERS = [
+  { id: "placeholder-2", displayName: "다연", avatarUrl: null, isSelf: false },
+  { id: "placeholder-3", displayName: "민수", avatarUrl: null, isSelf: false },
+  { id: "placeholder-4", displayName: "지우", avatarUrl: null, isSelf: false },
+];
 
 const Sidebar = ({ currentUser }: { currentUser: AuthUser }) => {
   const pathname = usePathname();
-  const placeholderGroup = getPlaceholderGroup(currentUser);
+  const members = [
+    { id: currentUser.id, displayName: currentUser.name, avatarUrl: null, isSelf: true },
+    ...PLACEHOLDER_MEMBERS,
+  ];
 
   return (
     <aside className="flex h-full w-52 shrink-0 flex-col border-r border-border bg-surface">
@@ -74,7 +73,7 @@ const Sidebar = ({ currentUser }: { currentUser: AuthUser }) => {
           </button>
         </div>
         <ul className="flex flex-col gap-2">
-          {placeholderGroup.members.map((m) => (
+          {members.map((m) => (
             <li key={m.id} className="flex items-center gap-2 text-sm text-foreground">
               <Avatar fallback={m.displayName} size="sm" />
               <span>{m.displayName}</span>
