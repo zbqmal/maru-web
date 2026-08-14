@@ -1,18 +1,41 @@
 "use client";
 
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Bell, ChevronDown, LogOut, User } from "lucide-react";
 import Avatar from "@/components/ui/avatar";
+import type { AuthUser } from "@/lib/api/auth";
+import { logout } from "@/lib/api/auth";
+import { CURRENT_USER_QUERY_KEY } from "@/lib/auth/session";
+import { getErrorMessage } from "@/lib/api/errors";
 import UserMenuItem from "./user-menu-item";
 
-// Placeholder data – will be replaced by auth context / API in a later PR
-const MOCK_USER = { displayName: "나", avatarUrl: null };
 const MOCK_GROUP = { name: "우리 넷", memberCount: 4, avatarUrl: null };
 
-const TopNav = () => {
+type TopNavProps = {
+  currentUser: AuthUser;
+};
+
+const TopNav = ({ currentUser }: TopNavProps) => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [logoutError, setLogoutError] = useState<string | null>(null);
+
+  const logoutMutation = useMutation({
+    mutationFn: logout,
+    onSuccess: async () => {
+      setUserMenuOpen(false);
+      setLogoutError(null);
+      queryClient.removeQueries({ queryKey: CURRENT_USER_QUERY_KEY });
+      router.replace("/login");
+      router.refresh();
+    },
+    onError: (error) => {
+      setLogoutError(getErrorMessage(error));
+    },
+  });
 
   return (
     <header className="flex h-14 items-center gap-4 border-b border-border bg-surface px-6">
@@ -49,8 +72,8 @@ const TopNav = () => {
             onClick={() => setUserMenuOpen((v) => !v)}
             className="flex items-center gap-1.5 rounded-full px-2 py-1 hover:bg-surface-muted"
           >
-            <Avatar fallback={MOCK_USER.displayName} size="sm" />
-            <span className="text-sm font-medium text-foreground">나</span>
+            <Avatar fallback={currentUser.name} size="sm" />
+            <span className="text-sm font-medium text-foreground">{currentUser.name}</span>
             <ChevronDown className="h-3.5 w-3.5 text-muted" />
           </button>
 
@@ -62,7 +85,13 @@ const TopNav = () => {
                 onClick={() => setUserMenuOpen(false)}
                 aria-hidden="true"
               />
-              <div className="absolute right-0 z-20 mt-2 w-40 rounded-xl border border-border bg-surface py-1 shadow-lg">
+              <div className="absolute right-0 z-20 mt-2 w-56 rounded-xl border border-border bg-surface py-1 shadow-lg">
+                <div className="border-b border-border px-4 py-3">
+                  <p className="truncate text-sm font-semibold text-foreground">
+                    {currentUser.name}
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground">{currentUser.email}</p>
+                </div>
                 <UserMenuItem
                   href="/profile"
                   icon={User}
@@ -76,16 +105,18 @@ const TopNav = () => {
                   onClick={() => setUserMenuOpen(false)}
                 />
                 <hr className="my-1 border-border" />
+                {logoutError && (
+                  <p role="alert" className="px-4 py-2 text-xs text-destructive">
+                    {logoutError}
+                  </p>
+                )}
                 <button
-                  onClick={() => {
-                    setUserMenuOpen(false);
-                    // TODO: call logout API then redirect — implemented in PR 3
-                    router.push("/login");
-                  }}
+                  onClick={() => logoutMutation.mutate()}
+                  disabled={logoutMutation.isPending}
                   className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-foreground hover:bg-surface-muted"
                 >
                   <LogOut className="h-4 w-4 text-muted-foreground" />
-                  로그아웃
+                  {logoutMutation.isPending ? "로그아웃 중..." : "로그아웃"}
                 </button>
               </div>
             </>

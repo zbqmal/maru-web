@@ -1,4 +1,14 @@
-const AuthLayout = ({ children }: { children: React.ReactNode }) => {
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { AUTH_COOKIE_NAME } from "@/lib/auth/session";
+
+const AuthLayout = async ({ children }: { children: React.ReactNode }) => {
+  const cookieStore = await cookies();
+
+  if (cookieStore.has(AUTH_COOKIE_NAME)) {
+    redirect("/diary");
+  }
+
   return (
     <div className="flex min-h-screen">
       {/* Left panel — branding */}

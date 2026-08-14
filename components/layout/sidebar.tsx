@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Home, CalendarDays, HelpCircle, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Avatar from "@/components/ui/avatar";
+import type { AuthUser } from "@/lib/api/auth";
 
 const NAV_ITEMS = [
   { href: "/diary", label: "오늘의 다이어리", icon: Home },
@@ -12,19 +13,22 @@ const NAV_ITEMS = [
   { href: "/questions", label: "질문 설정하기", icon: HelpCircle },
 ];
 
-// Placeholder group & members – will be replaced by real data in a later PR
-const MOCK_GROUP = {
-  name: "우리 넷",
-  members: [
-    { id: "1", displayName: "나", avatarUrl: null, isSelf: true },
-    { id: "2", displayName: "다연", avatarUrl: null, isSelf: false },
-    { id: "3", displayName: "민수", avatarUrl: null, isSelf: false },
-    { id: "4", displayName: "지우", avatarUrl: null, isSelf: false },
-  ],
+const PLACEHOLDER_MEMBERS = [
+  { id: "placeholder-2", displayName: "다연", avatarUrl: null, isSelf: false },
+  { id: "placeholder-3", displayName: "민수", avatarUrl: null, isSelf: false },
+  { id: "placeholder-4", displayName: "지우", avatarUrl: null, isSelf: false },
+];
+
+type SidebarProps = {
+  currentUser: AuthUser;
 };
 
-const Sidebar = () => {
+const Sidebar = ({ currentUser }: SidebarProps) => {
   const pathname = usePathname();
+  const members = [
+    { id: currentUser.id, displayName: currentUser.name, avatarUrl: null, isSelf: true },
+    ...PLACEHOLDER_MEMBERS,
+  ];
 
   return (
     <aside className="flex h-full w-52 shrink-0 flex-col border-r border-border bg-surface">
@@ -73,7 +77,7 @@ const Sidebar = () => {
           </button>
         </div>
         <ul className="flex flex-col gap-2">
-          {MOCK_GROUP.members.map((m) => (
+          {members.map((m) => (
             <li key={m.id} className="flex items-center gap-2 text-sm text-foreground">
               <Avatar fallback={m.displayName} size="sm" />
               <span>{m.displayName}</span>

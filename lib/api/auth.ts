@@ -1,4 +1,5 @@
 import { apiRequest } from "@/lib/api/client";
+import { ApiError } from "@/lib/api/errors";
 
 export interface AuthUser {
   id: string;
@@ -25,3 +26,17 @@ export const login = (body: LoginInput) => apiRequest<AuthUser>("/login", { meth
 
 export const register = (body: RegisterInput) =>
   apiRequest<AuthUser>("/register", { method: "POST", body });
+
+export const getCurrentUser = async () => {
+  try {
+    return await apiRequest<AuthUser>("/me");
+  } catch (error) {
+    if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+      return null;
+    }
+
+    throw error;
+  }
+};
+
+export const logout = () => apiRequest<void>("/logout", { method: "POST" });

@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import RegisterForm from "../register-form";
@@ -15,13 +16,28 @@ jest.mock("@/lib/api/auth", () => ({
 import { register } from "@/lib/api/auth";
 const mockRegister = register as jest.MockedFunction<typeof register>;
 
+const renderRegisterForm = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <RegisterForm />
+    </QueryClientProvider>
+  );
+};
+
 describe("RegisterForm", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it("renders name, email, password fields and submit button", () => {
-    render(<RegisterForm />);
+    renderRegisterForm();
     expect(screen.getByLabelText("이름")).toBeInTheDocument();
     expect(screen.getByLabelText("이메일")).toBeInTheDocument();
     expect(screen.getByLabelText("비밀번호")).toBeInTheDocument();
@@ -30,7 +46,7 @@ describe("RegisterForm", () => {
 
   it("shows validation errors when submitting empty form", async () => {
     const user = userEvent.setup();
-    render(<RegisterForm />);
+    renderRegisterForm();
     await user.click(screen.getByRole("button", { name: "회원가입" }));
     expect(await screen.findByText("이름을 입력해주세요.")).toBeInTheDocument();
     expect(await screen.findByText("이메일을 입력해주세요.")).toBeInTheDocument();
@@ -40,7 +56,7 @@ describe("RegisterForm", () => {
 
   it("shows validation error for invalid email", async () => {
     const user = userEvent.setup();
-    render(<RegisterForm />);
+    renderRegisterForm();
     await user.type(screen.getByLabelText("이름"), "홍길동");
     await user.type(screen.getByLabelText("이메일"), "bademail");
     await user.type(screen.getByLabelText("비밀번호"), "Str0ng!");
@@ -51,7 +67,7 @@ describe("RegisterForm", () => {
 
   it("shows validation error for too-short password", async () => {
     const user = userEvent.setup();
-    render(<RegisterForm />);
+    renderRegisterForm();
     await user.type(screen.getByLabelText("이름"), "홍길동");
     await user.type(screen.getByLabelText("이메일"), "user@example.com");
     await user.type(screen.getByLabelText("비밀번호"), "short");
@@ -62,7 +78,7 @@ describe("RegisterForm", () => {
 
   it("shows validation error for password missing complexity requirements", async () => {
     const user = userEvent.setup();
-    render(<RegisterForm />);
+    renderRegisterForm();
     await user.type(screen.getByLabelText("이름"), "홍길동");
     await user.type(screen.getByLabelText("이메일"), "user@example.com");
     await user.type(screen.getByLabelText("비밀번호"), "alllowercase1!");
@@ -85,7 +101,7 @@ describe("RegisterForm", () => {
       updatedAt: "",
     });
 
-    render(<RegisterForm />);
+    renderRegisterForm();
     await user.type(screen.getByLabelText("이름"), "홍길동");
     await user.type(screen.getByLabelText("이메일"), "user@example.com");
     await user.type(screen.getByLabelText("비밀번호"), "Str0ngP@ss");
@@ -105,7 +121,7 @@ describe("RegisterForm", () => {
     const user = userEvent.setup();
     mockRegister.mockRejectedValueOnce(new Error("이미 사용 중인 이메일입니다."));
 
-    render(<RegisterForm />);
+    renderRegisterForm();
     await user.type(screen.getByLabelText("이름"), "홍길동");
     await user.type(screen.getByLabelText("이메일"), "taken@example.com");
     await user.type(screen.getByLabelText("비밀번호"), "Str0ngP@ss");
@@ -119,7 +135,7 @@ describe("RegisterForm", () => {
     const user = userEvent.setup();
     mockRegister.mockImplementation(() => new Promise(() => {})); // never resolves
 
-    render(<RegisterForm />);
+    renderRegisterForm();
     await user.type(screen.getByLabelText("이름"), "홍길동");
     await user.type(screen.getByLabelText("이메일"), "user@example.com");
     await user.type(screen.getByLabelText("비밀번호"), "Str0ngP@ss");
@@ -130,7 +146,7 @@ describe("RegisterForm", () => {
 
   it("toggles password visibility", async () => {
     const user = userEvent.setup();
-    render(<RegisterForm />);
+    renderRegisterForm();
     const passwordInput = screen.getByLabelText("비밀번호");
     expect(passwordInput).toHaveAttribute("type", "password");
     await user.click(screen.getByRole("button", { name: "비밀번호 보기" }));
@@ -140,7 +156,7 @@ describe("RegisterForm", () => {
   });
 
   it("has link to /login", () => {
-    render(<RegisterForm />);
+    renderRegisterForm();
     expect(screen.getByRole("link", { name: "로그인" })).toHaveAttribute("href", "/login");
   });
 });
