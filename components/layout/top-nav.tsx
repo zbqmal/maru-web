@@ -13,11 +13,16 @@ import UserMenuItem from "./user-menu-item";
 
 const MOCK_GROUP = { name: "우리 넷", memberCount: 4, avatarUrl: null };
 
-const TopNav = ({ currentUser }: { currentUser: AuthUser }) => {
+type TopNavProps = {
+  currentUser: AuthUser;
+};
+
+const TopNav = ({ currentUser }: TopNavProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
+
   const logoutMutation = useMutation({
     mutationFn: logout,
     onSuccess: async () => {
@@ -82,7 +87,9 @@ const TopNav = ({ currentUser }: { currentUser: AuthUser }) => {
               />
               <div className="absolute right-0 z-20 mt-2 w-56 rounded-xl border border-border bg-surface py-1 shadow-lg">
                 <div className="border-b border-border px-4 py-3">
-                  <p className="truncate text-sm font-semibold text-foreground">{currentUser.name}</p>
+                  <p className="truncate text-sm font-semibold text-foreground">
+                    {currentUser.name}
+                  </p>
                   <p className="truncate text-xs text-muted-foreground">{currentUser.email}</p>
                 </div>
                 <UserMenuItem

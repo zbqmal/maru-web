@@ -19,7 +19,11 @@ const PLACEHOLDER_MEMBERS = [
   { id: "placeholder-4", displayName: "지우", avatarUrl: null, isSelf: false },
 ];
 
-const Sidebar = ({ currentUser }: { currentUser: AuthUser }) => {
+type SidebarProps = {
+  currentUser: AuthUser;
+};
+
+const Sidebar = ({ currentUser }: SidebarProps) => {
   const pathname = usePathname();
   const members = [
     { id: currentUser.id, displayName: currentUser.name, avatarUrl: null, isSelf: true },

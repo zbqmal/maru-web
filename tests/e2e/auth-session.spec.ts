@@ -11,7 +11,7 @@ test("unauthenticated users trying to open protected routes are redirected to lo
 }) => {
   await page.goto("/profile");
 
-  await expect(page).toHaveURL(/\/login$/);
+  await expect(page).toHaveURL(/\/login\?next=%2Fprofile$/);
   await expect(page.getByRole("heading", { name: "로그인" })).toBeVisible();
 });
 

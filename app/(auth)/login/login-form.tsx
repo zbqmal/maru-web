@@ -72,7 +72,10 @@ const LoginForm = () => {
       </p>
 
       {serverError && (
-        <p role="alert" className="mb-4 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <p
+          role="alert"
+          className="mb-4 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive"
+        >
           {serverError}
         </p>
       )}
