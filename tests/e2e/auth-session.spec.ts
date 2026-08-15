@@ -46,7 +46,7 @@ test("authenticated users are redirected away from auth pages and see their sess
 
   await page.goto("/login");
 
-  await expect(page).toHaveURL(/\/diary$/);
+  await expect(page).toHaveURL(/\/home$/);
   await expect(page.getByRole("button", { name: "사용자 메뉴" })).toContainText("홍길동");
 
   await page.getByRole("button", { name: "사용자 메뉴" }).click();

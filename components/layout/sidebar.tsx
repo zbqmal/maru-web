@@ -34,7 +34,7 @@ const Sidebar = ({ currentUser }: SidebarProps) => {
     <aside className="flex h-full w-52 shrink-0 flex-col border-r border-border bg-surface">
       {/* Logo */}
       <div className="px-5 pt-6 pb-4">
-        <Link href="/diary" className="block">
+        <Link href="/home" className="block">
           <p className="text-lg font-bold text-foreground">MARU</p>
           <p className="text-xs text-muted-foreground">우리의 하루를, 함께</p>
         </Link>

@@ -7,8 +7,8 @@ jest.mock("next/navigation", () => ({
 }));
 
 describe("Home page", () => {
-  it("redirects to /diary", () => {
+  it("redirects to /home", () => {
     render(<Home />);
-    expect(redirect).toHaveBeenCalledWith("/diary");
+    expect(redirect).toHaveBeenCalledWith("/home");
   });
 });
