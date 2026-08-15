@@ -63,7 +63,7 @@ const RegisterForm = () => {
     try {
       const currentUser = await register({ name: name.trim(), email, password });
       queryClient.setQueryData(CURRENT_USER_QUERY_KEY, currentUser);
-      router.push("/diary");
+      router.push("/home");
     } catch (err) {
       setServerError(getErrorMessage(err));
     } finally {

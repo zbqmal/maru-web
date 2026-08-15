@@ -65,7 +65,7 @@ describe("LoginForm", () => {
     expect(mockLogin).not.toHaveBeenCalled();
   });
 
-  it("calls login API and redirects to /diary on success", async () => {
+  it("calls login API and redirects to /home on success", async () => {
     const user = userEvent.setup();
     mockLogin.mockResolvedValueOnce({
       id: "1",
@@ -87,7 +87,7 @@ describe("LoginForm", () => {
         email: "user@example.com",
         password: "password",
       });
-      expect(mockPush).toHaveBeenCalledWith("/diary");
+      expect(mockPush).toHaveBeenCalledWith("/home");
     });
   });
 
