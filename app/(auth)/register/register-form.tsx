@@ -10,14 +10,13 @@ import { Input } from "@/components/ui/input";
 import { register } from "@/lib/api/auth";
 import { CURRENT_USER_QUERY_KEY } from "@/lib/auth/session";
 import { getErrorMessage } from "@/lib/api/errors";
+import { PASSWORD_PATTERN } from "@/lib/auth/auth";
 
 interface FieldErrors {
   name?: string;
   email?: string;
   password?: string;
 }
-
-const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/;
 
 const validateRegisterForm = (name: string, email: string, password: string): FieldErrors => {
   const errors: FieldErrors = {};

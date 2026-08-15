@@ -22,6 +22,15 @@ export interface RegisterInput {
   name: string;
 }
 
+export interface ForgotPasswordInput {
+  email: string;
+}
+
+export interface ResetPasswordInput {
+  token: string;
+  newPassword: string;
+}
+
 export const login = (body: LoginInput) => apiRequest<AuthUser>("/login", { method: "POST", body });
 
 export const register = (body: RegisterInput) =>
@@ -40,15 +49,6 @@ export const getCurrentUser = async () => {
 };
 
 export const logout = () => apiRequest<void>("/logout", { method: "POST" });
-
-export interface ForgotPasswordInput {
-  email: string;
-}
-
-export interface ResetPasswordInput {
-  token: string;
-  newPassword: string;
-}
 
 export const forgotPassword = (body: ForgotPasswordInput) =>
   apiRequest<void>("/forgot-password", { method: "POST", body });

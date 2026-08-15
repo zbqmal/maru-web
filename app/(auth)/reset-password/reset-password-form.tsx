@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { resetPassword } from "@/lib/api/auth";
 import { ApiError, getErrorMessage } from "@/lib/api/errors";
-
-const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/;
+import { PASSWORD_PATTERN } from "@/lib/auth/auth";
 
 const validatePassword = (password: string): string | undefined => {
   if (!password) return "비밀번호를 입력해주세요.";
@@ -101,8 +100,7 @@ const ResetPasswordForm = () => {
         <h1 className="text-2xl font-bold">링크가 만료되었습니다</h1>
         <p className="text-sm text-muted-foreground">
           비밀번호 재설정 링크가 만료되었거나 이미 사용되었습니다.
-          <br />
-          새 링크를 요청해주세요.
+          <br />새 링크를 요청해주세요.
         </p>
         <Link
           href="/forgot-password"
@@ -181,4 +179,3 @@ const ResetPasswordForm = () => {
 };
 
 export default ResetPasswordForm;
-
