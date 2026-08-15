@@ -6,7 +6,7 @@ const AuthLayout = async ({ children }: { children: React.ReactNode }) => {
   const cookieStore = await cookies();
 
   if (cookieStore.has(AUTH_COOKIE_NAME)) {
-    redirect("/diary");
+    redirect("/home");
   }
 
   return (
