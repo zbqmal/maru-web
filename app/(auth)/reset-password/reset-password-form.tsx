@@ -39,7 +39,30 @@ const ResetPasswordForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resetState, setResetState] = useState<ResetState>("idle");
 
-  // No token in URL → treat as invalid link immediately
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!token) return;
+    setServerError(null);
+
+    const error = validatePassword(newPassword);
+    setPasswordError(error);
+    if (error) return;
+
+    setIsSubmitting(true);
+    try {
+      await resetPassword({ token, newPassword });
+      setResetState("success");
+    } catch (err) {
+      if (isInvalidTokenError(err)) {
+        setResetState("invalid-token");
+      } else {
+        setServerError(getErrorMessage(err));
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (!token) {
     return (
       <div className="flex flex-col items-center gap-4 py-4 text-center">
@@ -64,9 +87,7 @@ const ResetPasswordForm = () => {
       <div className="flex flex-col items-center gap-4 py-4 text-center">
         <CheckCircle className="h-12 w-12 text-primary" aria-hidden="true" />
         <h1 className="text-2xl font-bold">비밀번호가 변경되었습니다</h1>
-        <p className="text-sm text-muted-foreground">
-          새 비밀번호로 로그인할 수 있습니다.
-        </p>
+        <p className="text-sm text-muted-foreground">새 비밀번호로 로그인할 수 있습니다.</p>
         <Link href="/login" className="mt-2 text-sm font-medium text-primary hover:underline">
           로그인하기
         </Link>
@@ -92,29 +113,6 @@ const ResetPasswordForm = () => {
       </div>
     );
   }
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setServerError(null);
-
-    const error = validatePassword(newPassword);
-    setPasswordError(error);
-    if (error) return;
-
-    setIsSubmitting(true);
-    try {
-      await resetPassword({ token, newPassword });
-      setResetState("success");
-    } catch (err) {
-      if (isInvalidTokenError(err)) {
-        setResetState("invalid-token");
-      } else {
-        setServerError(getErrorMessage(err));
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   return (
     <div>
@@ -183,3 +181,4 @@ const ResetPasswordForm = () => {
 };
 
 export default ResetPasswordForm;
+
