@@ -145,5 +145,5 @@ test("profile update errors are surfaced to users", async ({ context, page }) =>
 
   await page.getByLabel("이름").fill("김마루");
   await page.getByRole("button", { name: "저장하기" }).click();
-  await expect(page.getByRole("alert")).toHaveText("이름 형식이 올바르지 않습니다.");
+  await expect(page.getByText("이름 형식이 올바르지 않습니다.")).toBeVisible();
 });

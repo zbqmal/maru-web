@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Avatar from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -23,21 +23,26 @@ const ProfileForm = () => {
     queryFn: getProfile,
   });
 
-  const [name, setName] = useState("");
-  const [birthday, setBirthday] = useState("");
+  const [nameInput, setNameInput] = useState("");
+  const [birthdayInput, setBirthdayInput] = useState("");
+  const [isNameDirty, setIsNameDirty] = useState(false);
+  const [isBirthdayDirty, setIsBirthdayDirty] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
   const [birthdayError, setBirthdayError] = useState<string | null>(null);
   const [notice, setNotice] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (!profile) {
-      return;
-    }
+  const resolvedName = isNameDirty ? nameInput : (profile?.name ?? "");
+  const resolvedBirthday = isBirthdayDirty ? birthdayInput : (profile?.birthday ?? "");
 
-    setName(profile.name);
-    setBirthday(profile.birthday ?? "");
-  }, [profile]);
+  const syncLatestProfile = async () => {
+    await queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY });
+    const latestProfile = await queryClient.fetchQuery({
+      queryKey: PROFILE_QUERY_KEY,
+      queryFn: getProfile,
+    });
+    queryClient.setQueryData(CURRENT_USER_QUERY_KEY, latestProfile);
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -45,7 +50,7 @@ const ProfileForm = () => {
     setBirthdayError(null);
     setNotice(null);
 
-    const trimmedName = name.trim();
+    const trimmedName = resolvedName.trim();
 
     if (!trimmedName) {
       setNameError("이름을 입력해주세요.");
@@ -57,7 +62,7 @@ const ProfileForm = () => {
       return;
     }
 
-    if (birthday && !DATE_REGEX.test(birthday)) {
+    if (resolvedBirthday && !DATE_REGEX.test(resolvedBirthday)) {
       setBirthdayError("생일 형식이 올바르지 않습니다.");
       return;
     }
@@ -67,7 +72,7 @@ const ProfileForm = () => {
     }
 
     const didNameChange = trimmedName !== profile.name;
-    const didBirthdayChange = birthday !== (profile.birthday ?? "");
+    const didBirthdayChange = resolvedBirthday !== (profile.birthday ?? "");
 
     if (!didNameChange && !didBirthdayChange) {
       setNotice({ type: "success", message: "변경된 내용이 없어요." });
@@ -76,24 +81,36 @@ const ProfileForm = () => {
 
     setIsSubmitting(true);
 
-    try {
-      let updatedProfile = profile;
+    let hasSavedName = false;
+    let hasSavedBirthday = false;
 
+    try {
       if (didNameChange) {
-        updatedProfile = await updateProfileName({ name: trimmedName });
+        await updateProfileName({ name: trimmedName });
+        hasSavedName = true;
       }
 
       if (didBirthdayChange) {
-        updatedProfile = await updateProfileBirthday({ birthday: birthday || null });
+        await updateProfileBirthday({ birthday: resolvedBirthday || null });
+        hasSavedBirthday = true;
       }
 
-      queryClient.setQueryData(PROFILE_QUERY_KEY, updatedProfile);
-      queryClient.setQueryData(CURRENT_USER_QUERY_KEY, updatedProfile);
-      setName(updatedProfile.name);
-      setBirthday(updatedProfile.birthday ?? "");
+      await syncLatestProfile();
+      setNameInput("");
+      setBirthdayInput("");
+      setIsNameDirty(false);
+      setIsBirthdayDirty(false);
       setNotice({ type: "success", message: "프로필이 저장되었어요." });
     } catch (error) {
-      setNotice({ type: "error", message: getErrorMessage(error) });
+      try {
+        await syncLatestProfile();
+      } catch {}
+      const errorMessage = getErrorMessage(error);
+      const partialSaveMessage =
+        hasSavedName || hasSavedBirthday
+          ? `일부 변경사항만 저장되었어요. ${errorMessage}`
+          : errorMessage;
+      setNotice({ type: "error", message: partialSaveMessage });
     } finally {
       setIsSubmitting(false);
     }
@@ -165,8 +182,11 @@ const ProfileForm = () => {
             </label>
             <Input
               id="profile-name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
+              value={resolvedName}
+              onChange={(event) => {
+                setIsNameDirty(true);
+                setNameInput(event.target.value);
+              }}
               aria-invalid={!!nameError}
               aria-describedby={nameError ? "profile-name-error" : undefined}
               maxLength={100}
@@ -192,8 +212,11 @@ const ProfileForm = () => {
             <Input
               id="profile-birthday"
               type="date"
-              value={birthday}
-              onChange={(event) => setBirthday(event.target.value)}
+              value={resolvedBirthday}
+              onChange={(event) => {
+                setIsBirthdayDirty(true);
+                setBirthdayInput(event.target.value);
+              }}
               aria-invalid={!!birthdayError}
               aria-describedby={birthdayError ? "profile-birthday-error" : undefined}
             />
