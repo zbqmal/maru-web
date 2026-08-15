@@ -40,3 +40,18 @@ export const getCurrentUser = async () => {
 };
 
 export const logout = () => apiRequest<void>("/logout", { method: "POST" });
+
+export interface ForgotPasswordInput {
+  email: string;
+}
+
+export interface ResetPasswordInput {
+  token: string;
+  newPassword: string;
+}
+
+export const forgotPassword = (body: ForgotPasswordInput) =>
+  apiRequest<void>("/forgot-password", { method: "POST", body });
+
+export const resetPassword = (body: ResetPasswordInput) =>
+  apiRequest<void>("/reset-password", { method: "POST", body });
