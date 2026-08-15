@@ -4,7 +4,14 @@ import { FormEvent, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Avatar from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import ErrorState from "@/components/ui/error-state";
 import { Input } from "@/components/ui/input";
 import LoadingSpinner from "@/components/ui/loading-spinner";
@@ -18,7 +25,12 @@ const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 const ProfileForm = () => {
   const queryClient = useQueryClient();
-  const { data: profile, isLoading, isError, refetch } = useQuery({
+  const {
+    data: profile,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: PROFILE_QUERY_KEY,
     queryFn: getProfile,
   });
@@ -155,7 +167,9 @@ const ProfileForm = () => {
               <Avatar fallback={profile.name} size="lg" />
               <div>
                 <p className="text-sm font-semibold text-foreground">{profile.name}</p>
-                <p className="text-xs text-muted-foreground">프로필 이미지는 추후 업데이트될 예정이에요.</p>
+                <p className="text-xs text-muted-foreground">
+                  프로필 이미지는 추후 업데이트될 예정이에요.
+                </p>
               </div>
             </div>
             <Button type="button" variant="outline" disabled>
