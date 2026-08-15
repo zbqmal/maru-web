@@ -43,14 +43,16 @@ test.describe("Forgot Password flow", () => {
     await page.getByLabel("이메일").fill("user@example.com");
     await page.getByRole("button", { name: "재설정 링크 보내기" }).click();
 
-    await expect(page.getByRole("alert")).toContainText("서버 오류가 발생했습니다.");
+    await expect(
+      page.getByRole("alert").filter({ hasText: "서버 오류가 발생했습니다." })
+    ).toBeVisible();
   });
 
   test("login page has link to forgot-password", async ({ page }) => {
     await page.goto("/login");
     await expect(page.getByRole("link", { name: "비밀번호 찾기" })).toHaveAttribute(
       "href",
-      "/forgot-password",
+      "/forgot-password"
     );
   });
 });
@@ -59,9 +61,10 @@ test.describe("Reset Password flow", () => {
   test("shows invalid link when no token in URL", async ({ page }) => {
     await page.goto("/reset-password");
     await expect(page.getByRole("heading", { name: "유효하지 않은 링크" })).toBeVisible();
-    await expect(
-      page.getByRole("link", { name: "비밀번호 재설정 다시 요청하기" }),
-    ).toHaveAttribute("href", "/forgot-password");
+    await expect(page.getByRole("link", { name: "비밀번호 재설정 다시 요청하기" })).toHaveAttribute(
+      "href",
+      "/forgot-password"
+    );
   });
 
   test("user can reset password with valid token and is directed to login", async ({ page }) => {
@@ -93,9 +96,10 @@ test.describe("Reset Password flow", () => {
     await page.getByRole("button", { name: "비밀번호 변경" }).click();
 
     await expect(page.getByRole("heading", { name: "링크가 만료되었습니다" })).toBeVisible();
-    await expect(
-      page.getByRole("link", { name: "비밀번호 재설정 다시 요청하기" }),
-    ).toHaveAttribute("href", "/forgot-password");
+    await expect(page.getByRole("link", { name: "비밀번호 재설정 다시 요청하기" })).toHaveAttribute(
+      "href",
+      "/forgot-password"
+    );
   });
 
   test("shows validation errors for weak password", async ({ page }) => {

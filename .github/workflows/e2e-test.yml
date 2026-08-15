@@ -1,4 +1,4 @@
-name: Build & E2E Test
+name: E2E Test
 
 on:
   pull_request:
