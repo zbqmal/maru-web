@@ -44,10 +44,41 @@ test("authenticated users are redirected away from auth pages and see their sess
     });
   });
 
+  await page.route("http://127.0.0.1:3001/groups", async (route) => {
+    await route.fulfill({
+      status: 200,
+      headers: apiHeaders,
+      body: JSON.stringify([
+        {
+          id: "g1",
+          name: "우리 가족",
+          createdAt: "2026-08-14T00:00:00.000Z",
+          updatedAt: "2026-08-14T00:00:00.000Z",
+          memberships: [
+            {
+              id: "m1",
+              userId: "1",
+              role: "LEADER",
+              createdAt: "2026-08-14T00:00:00.000Z",
+              updatedAt: "2026-08-14T00:00:00.000Z",
+              user: {
+                id: "1",
+                name: "홍길동",
+                profileImageKey: null,
+              },
+            },
+          ],
+        },
+      ]),
+    });
+  });
+
   await page.goto("/login");
 
   await expect(page).toHaveURL(/\/home$/);
   await expect(page.getByRole("button", { name: "사용자 메뉴" })).toContainText("홍길동");
+  await expect(page.getByRole("button", { name: "그룹 선택" })).toContainText("우리 가족");
+  await expect(page.getByText("멤버 1명")).toBeVisible();
 
   await page.getByRole("button", { name: "사용자 메뉴" }).click();
   await expect(page.getByText("user@example.com")).toBeVisible();

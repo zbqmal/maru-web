@@ -95,6 +95,8 @@ describe("GroupSelector", () => {
   it("renders active group name in the trigger button", () => {
     renderWithQuery(<GroupSelector />);
     expect(screen.getByRole("button", { name: "그룹 선택" })).toHaveTextContent("우리 가족");
+    expect(screen.getByRole("img", { name: "우리 가족" })).toHaveTextContent("우");
+    expect(screen.getByText("멤버 0명")).toBeInTheDocument();
   });
 
   it("opens dropdown on click and lists groups", async () => {

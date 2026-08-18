@@ -5,7 +5,6 @@ import { Users, Plus, LogIn } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import GroupSelector from "@/components/groups/group-selector";
 import CreateGroupDialog from "@/components/groups/create-group-dialog";
 import { useGroupsQuery } from "@/hooks/use-groups";
 import { useActiveGroupStore } from "@/lib/store/active-group";
@@ -33,7 +32,9 @@ const CalendarPlaceholderCard = () => (
       </CardTitle>
     </CardHeader>
     <CardContent>
-      <p className="text-muted-foreground text-sm">그룹에 참여하면 달력에서 기록을 확인할 수 있어요.</p>
+      <p className="text-muted-foreground text-sm">
+        그룹에 참여하면 달력에서 기록을 확인할 수 있어요.
+      </p>
     </CardContent>
   </Card>
 );
@@ -55,21 +56,11 @@ const HomePage = () => {
             <h1 className="mb-1 text-xl font-bold">홈</h1>
             <p className="text-sm text-muted-foreground">오늘도 함께 기록해 볼까요? 🪴</p>
           </div>
-          {hasGroups && <GroupSelector />}
         </div>
 
         {hasGroups && activeGroup ? (
           <Card>
             <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Users className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-semibold">{activeGroup.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    멤버 {activeGroup.memberships.length}명
-                  </p>
-                </div>
-              </div>
               <p className="text-sm text-muted-foreground">
                 오늘의 다이어리 기능은 곧 추가될 예정이에요. 📝
               </p>

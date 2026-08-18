@@ -16,6 +16,10 @@ const sessionCookie = {
 test("profile page loads profile data and supports updates", async ({ context, page }) => {
   await context.addCookies([sessionCookie]);
 
+  await page.route("http://127.0.0.1:3001/groups", async (route) => {
+    await route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify([]) });
+  });
+
   await page.route("http://127.0.0.1:3001/me", async (route) => {
     await route.fulfill({
       status: 200,
@@ -97,6 +101,10 @@ test("profile page loads profile data and supports updates", async ({ context, p
 
 test("profile update errors are surfaced to users", async ({ context, page }) => {
   await context.addCookies([sessionCookie]);
+
+  await page.route("http://127.0.0.1:3001/groups", async (route) => {
+    await route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify([]) });
+  });
 
   await page.route("http://127.0.0.1:3001/me", async (route) => {
     await route.fulfill({

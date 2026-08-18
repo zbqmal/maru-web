@@ -10,8 +10,8 @@ import { logout } from "@/lib/api/auth";
 import { CURRENT_USER_QUERY_KEY } from "@/lib/auth/session";
 import { getErrorMessage } from "@/lib/api/errors";
 import UserMenuItem from "./user-menu-item";
-
-const MOCK_GROUP = { name: "우리 넷", memberCount: 4, avatarUrl: null };
+import GroupSelector from "../groups/group-selector";
+import { GROUPS_QUERY_KEY } from "@/hooks/use-groups";
 
 type TopNavProps = {
   currentUser: AuthUser;
@@ -29,6 +29,7 @@ const TopNav = ({ currentUser }: TopNavProps) => {
       setUserMenuOpen(false);
       setLogoutError(null);
       queryClient.removeQueries({ queryKey: CURRENT_USER_QUERY_KEY });
+      queryClient.removeQueries({ queryKey: GROUPS_QUERY_KEY });
       router.replace("/login");
       router.refresh();
     },
@@ -41,18 +42,7 @@ const TopNav = ({ currentUser }: TopNavProps) => {
     <header className="flex h-14 items-center gap-4 border-b border-border bg-surface px-6">
       {/* Group switcher */}
       <div className="flex flex-1 items-center gap-3">
-        <Avatar fallback={MOCK_GROUP.name} size="default" className="bg-amber-200" />
-        <div>
-          <p className="text-xs text-muted-foreground">선택된 그룹</p>
-          <button className="flex items-center gap-1 text-sm font-semibold text-foreground hover:opacity-80">
-            {MOCK_GROUP.name}
-            <ChevronDown className="h-3.5 w-3.5 text-muted" />
-          </button>
-        </div>
-        <span className="ml-4 flex items-center gap-1 text-xs text-muted-foreground">
-          <span>👥</span>
-          멤버 {MOCK_GROUP.memberCount}명
-        </span>
+        <GroupSelector />
       </div>
 
       {/* Right actions */}

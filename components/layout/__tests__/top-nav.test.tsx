@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import TopNav from "../top-nav";
+import { GROUPS_QUERY_KEY } from "@/hooks/use-groups";
 
 const mockReplace = jest.fn();
 const mockRefresh = jest.fn();
@@ -17,6 +18,11 @@ jest.mock("@/lib/api/auth", () => ({
   logout: jest.fn(),
 }));
 
+jest.mock("@/components/groups/group-selector", () => ({
+  __esModule: true,
+  default: () => <div data-testid="top-nav-group-selector">group-selector</div>,
+}));
+
 import { logout } from "@/lib/api/auth";
 
 const mockLogout = logout as jest.MockedFunction<typeof logout>;
@@ -29,7 +35,7 @@ const renderTopNav = () => {
     },
   });
 
-  return render(
+  const view = render(
     <QueryClientProvider client={queryClient}>
       <TopNav
         currentUser={{
@@ -44,6 +50,8 @@ const renderTopNav = () => {
       />
     </QueryClientProvider>
   );
+
+  return { ...view, queryClient };
 };
 
 describe("TopNav", () => {
@@ -61,10 +69,17 @@ describe("TopNav", () => {
     expect(screen.getByText("user@example.com")).toBeInTheDocument();
   });
 
+  it("renders the group selector in the shared top navigation", () => {
+    renderTopNav();
+
+    expect(screen.getByTestId("top-nav-group-selector")).toBeInTheDocument();
+  });
+
   it("logs out and redirects to login", async () => {
     const user = userEvent.setup();
     mockLogout.mockResolvedValueOnce(undefined);
-    renderTopNav();
+    const { queryClient } = renderTopNav();
+    queryClient.setQueryData(GROUPS_QUERY_KEY, [{ id: "g1", name: "우리 가족" }]);
 
     await user.click(screen.getByRole("button", { name: "사용자 메뉴" }));
     await user.click(screen.getByRole("button", { name: "로그아웃" }));
@@ -74,6 +89,8 @@ describe("TopNav", () => {
       expect(mockReplace).toHaveBeenCalledWith("/login");
       expect(mockRefresh).toHaveBeenCalled();
     });
+
+    expect(queryClient.getQueryData(GROUPS_QUERY_KEY)).toBeUndefined();
   });
 
   it("shows a logout error when the request fails", async () => {
