@@ -72,12 +72,7 @@ const CreateGroupDialog = ({ open, onOpenChange }: CreateGroupDialogProps) => {
             )}
           </div>
           <DialogFooter className="mt-0">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={isPending}
-            >
+            <Button type="button" variant="outline" onClick={handleClose} disabled={isPending}>
               취소
             </Button>
             <Button type="submit" disabled={!name.trim() || isPending}>
@@ -91,4 +86,3 @@ const CreateGroupDialog = ({ open, onOpenChange }: CreateGroupDialogProps) => {
 };
 
 export default CreateGroupDialog;
-

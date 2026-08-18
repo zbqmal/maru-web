@@ -137,8 +137,7 @@ const GroupSelector = ({ className }: GroupSelectorProps) => {
                 }}
                 className="flex w-full items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:bg-surface-muted hover:text-foreground transition-colors"
               >
-                <Plus className="h-4 w-4 shrink-0" />
-                새 그룹 만들기
+                <Plus className="h-4 w-4 shrink-0" />새 그룹 만들기
               </button>
             </div>
           </div>
