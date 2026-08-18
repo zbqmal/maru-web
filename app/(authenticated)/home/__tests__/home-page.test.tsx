@@ -48,11 +48,6 @@ jest.mock("@/lib/store/active-group", () => ({
     }),
 }));
 
-jest.mock("@/components/groups/group-selector", () => ({
-  __esModule: true,
-  default: () => <div data-testid="group-selector">group-selector</div>,
-}));
-
 const renderWithQuery = (ui: React.ReactElement) => {
   const qc = new QueryClient();
   return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>);
@@ -100,13 +95,12 @@ describe("HomePage", () => {
     });
   });
 
-  it("shows group selector and active group card when user has groups", () => {
+  it("shows the diary placeholder and no group selector when user has groups", () => {
     mockGroupsQueryResult = { data: [mockGroup], isLoading: false, isError: false, refetch: jest.fn() };
     mockActiveGroupId = "g1";
     renderWithQuery(<HomePage />);
-    expect(screen.getByTestId("group-selector")).toBeInTheDocument();
-    expect(screen.getByText("우리 가족")).toBeInTheDocument();
-    expect(screen.getByText("멤버 1명")).toBeInTheDocument();
+    expect(screen.getByText(/오늘의 다이어리 기능은 곧 추가될 예정이에요/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "그룹 선택" })).not.toBeInTheDocument();
   });
 
   it("hides the no-group empty state when the user has an active group", () => {

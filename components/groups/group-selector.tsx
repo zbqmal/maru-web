@@ -9,6 +9,7 @@ import type { Group } from "@/lib/api/groups";
 import CreateGroupDialog from "@/components/groups/create-group-dialog";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import ErrorState from "@/components/ui/error-state";
+import Avatar from "../ui/avatar";
 
 type GroupSelectorProps = {
   className?: string;
@@ -69,28 +70,37 @@ const GroupSelector = ({ className }: GroupSelectorProps) => {
   return (
     <>
       <div className={cn("relative", className)} ref={dropdownRef}>
-        <button
-          type="button"
-          onClick={() => setDropdownOpen((prev) => !prev)}
-          aria-haspopup="listbox"
-          aria-expanded={dropdownOpen}
-          aria-label="그룹 선택"
-          className={cn(
-            "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold",
-            "hover:bg-surface-muted transition-colors",
-            activeGroup ? "text-foreground" : "text-muted-foreground"
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setDropdownOpen((prev) => !prev)}
+            aria-haspopup="listbox"
+            aria-expanded={dropdownOpen}
+            aria-label="그룹 선택"
+            className={cn(
+              "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold",
+              "hover:bg-surface-muted transition-colors",
+              activeGroup ? "text-foreground" : "text-muted-foreground"
+            )}
+          >
+            {activeGroup ? (
+              <>
+                <Avatar fallback={activeGroup.name} size="default" className="bg-amber-200" />
+                <span>{activeGroup.name}</span>
+              </>
+            ) : (
+              <span>그룹 선택</span>
+            )}
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+          </button>
+
+          {activeGroup && (
+            <span className="ml-4 flex items-center gap-1 text-xs text-muted-foreground">
+              <span>👥</span>
+              멤버 {activeGroup.memberships.length}명
+            </span>
           )}
-        >
-          {activeGroup ? (
-            <>
-              <Users className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <span>{activeGroup.name}</span>
-            </>
-          ) : (
-            <span>그룹 선택</span>
-          )}
-          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-        </button>
+        </div>
 
         {dropdownOpen && (
           <div

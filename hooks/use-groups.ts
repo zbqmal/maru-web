@@ -3,14 +3,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createGroup, listGroups, type CreateGroupInput } from "@/lib/api/groups";
 import { useActiveGroupStore } from "@/lib/store/active-group";
+import { useCurrentUserQuery } from "@/hooks/use-current-user";
 
 export const GROUPS_QUERY_KEY = ["groups"] as const;
 
-export const useGroupsQuery = () =>
-  useQuery({
+export const useGroupsQuery = () => {
+  const { data: currentUser, isLoading: isCurrentUserLoading } = useCurrentUserQuery();
+
+  return useQuery({
     queryKey: GROUPS_QUERY_KEY,
     queryFn: listGroups,
+    enabled: !isCurrentUserLoading && !!currentUser,
   });
+};
 
 export const useCreateGroupMutation = () => {
   const queryClient = useQueryClient();
