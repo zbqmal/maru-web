@@ -86,7 +86,7 @@ describe("Sidebar", () => {
 
   it("renders group members from the active group", () => {
     renderWithQuery(<Sidebar currentUser={mockCurrentUser} />);
-    expect(screen.getByText("홍길동 (리더)")).toBeInTheDocument();
+    expect(screen.getByText("홍길동 (나)")).toBeInTheDocument();
     expect(screen.getByText("다연")).toBeInTheDocument();
   });
 

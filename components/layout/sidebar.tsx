@@ -98,7 +98,7 @@ const Sidebar = ({ currentUser }: SidebarProps) => {
                 <Avatar fallback={m.displayName} size="sm" />
                 <span className="truncate">
                   {m.displayName}
-                  {m.isSelf && m.isLeader ? " (리더)" : ""}
+                  {m.isSelf && " (나)"}
                 </span>
                 {m.isLeader && <span className="ml-auto shrink-0 text-xs" aria-label="그룹 리더">👑</span>}
               </li>
