@@ -1,6 +1,7 @@
 "use client";
 
 import type { AuthUser } from "@/lib/api/auth";
+import GroupHeader from "@/components/groups/group-header";
 import Sidebar from "./sidebar";
 import TopNav from "./top-nav";
 
@@ -15,6 +16,7 @@ const AppShell = ({ children, currentUser }: AppShellProps) => {
       <Sidebar currentUser={currentUser} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <TopNav currentUser={currentUser} />
+        <GroupHeader />
         <main className="flex-1 overflow-y-auto p-6">{children}</main>
       </div>
     </div>

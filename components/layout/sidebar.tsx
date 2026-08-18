@@ -6,17 +6,12 @@ import { Home, CalendarDays, HelpCircle, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Avatar from "@/components/ui/avatar";
 import type { AuthUser } from "@/lib/api/auth";
+import { useActiveGroupQuery } from "@/hooks/use-groups";
 
 const NAV_ITEMS = [
   { href: "/diary", label: "오늘의 다이어리", icon: Home },
   { href: "/calendar", label: "달력 보기", icon: CalendarDays },
   { href: "/questions", label: "질문 설정하기", icon: HelpCircle },
-];
-
-const PLACEHOLDER_MEMBERS = [
-  { id: "placeholder-2", displayName: "다연", avatarUrl: null, isSelf: false },
-  { id: "placeholder-3", displayName: "민수", avatarUrl: null, isSelf: false },
-  { id: "placeholder-4", displayName: "지우", avatarUrl: null, isSelf: false },
 ];
 
 type SidebarProps = {
@@ -25,10 +20,18 @@ type SidebarProps = {
 
 const Sidebar = ({ currentUser }: SidebarProps) => {
   const pathname = usePathname();
-  const members = [
-    { id: currentUser.id, displayName: currentUser.name, avatarUrl: null, isSelf: true },
-    ...PLACEHOLDER_MEMBERS,
-  ];
+  const { activeGroup, isLoading } = useActiveGroupQuery();
+
+  const members = activeGroup
+    ? activeGroup.memberships.map((m) => ({
+        id: m.id,
+        userId: m.userId,
+        displayName: m.user.name,
+        avatarUrl: null,
+        isLeader: m.role === "LEADER",
+        isSelf: m.userId === currentUser.id,
+      }))
+    : [];
 
   return (
     <aside className="flex h-full w-52 shrink-0 flex-col border-r border-border bg-surface">
@@ -76,15 +79,32 @@ const Sidebar = ({ currentUser }: SidebarProps) => {
             <Plus className="h-3.5 w-3.5" />
           </button>
         </div>
-        <ul className="flex flex-col gap-2">
-          {members.map((m) => (
-            <li key={m.id} className="flex items-center gap-2 text-sm text-foreground">
-              <Avatar fallback={m.displayName} size="sm" />
-              <span>{m.displayName}</span>
-              {m.isSelf && <span className="text-xs">👑</span>}
-            </li>
-          ))}
-        </ul>
+
+        {isLoading ? (
+          <ul className="flex flex-col gap-2" aria-busy="true" aria-label="멤버 목록 불러오는 중">
+            {[0, 1, 2].map((i) => (
+              <li key={i} className="flex items-center gap-2">
+                <div className="h-7 w-7 animate-pulse rounded-full bg-surface-muted" />
+                <div className="h-3 w-20 animate-pulse rounded bg-surface-muted" />
+              </li>
+            ))}
+          </ul>
+        ) : members.length === 0 ? (
+          <p className="text-xs text-muted-foreground">속한 그룹이 없어요</p>
+        ) : (
+          <ul className="flex flex-col gap-2" aria-label="그룹 멤버 목록">
+            {members.map((m) => (
+              <li key={m.id} className="flex items-center gap-2 text-sm text-foreground">
+                <Avatar fallback={m.displayName} size="sm" />
+                <span className="truncate">
+                  {m.displayName}
+                  {m.isSelf && m.isLeader ? " (리더)" : ""}
+                </span>
+                {m.isLeader && <span className="ml-auto shrink-0 text-xs" aria-label="그룹 리더">👑</span>}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* Sidebar footer illustration placeholder */}
