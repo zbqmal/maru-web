@@ -1,0 +1,40 @@
+import { apiRequest } from "@/lib/api/client";
+
+export interface GroupMemberUser {
+  id: string;
+  name: string;
+  profileImageKey: Record<string, unknown> | null;
+}
+
+export type GroupMemberRole = "LEADER" | "MEMBER";
+
+export interface GroupMember {
+  id: string;
+  userId: string;
+  role: GroupMemberRole;
+  createdAt: string;
+  updatedAt: string;
+  user: GroupMemberUser;
+}
+
+export interface Group {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  memberships: GroupMember[];
+}
+
+export interface CreateGroupInput {
+  name: string;
+}
+
+export const listGroups = () => apiRequest<Group[]>("/groups");
+
+export const createGroup = (body: CreateGroupInput) =>
+  apiRequest<Group>("/groups", { method: "POST", body });
+
+export const getGroup = (groupId: string) => apiRequest<Group>(`/groups/${groupId}`);
+
+export const listGroupMembers = (groupId: string) =>
+  apiRequest<GroupMember[]>(`/groups/${groupId}/members`);
