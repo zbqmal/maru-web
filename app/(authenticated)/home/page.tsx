@@ -6,8 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import CreateGroupDialog from "@/components/groups/create-group-dialog";
-import { useGroupsQuery } from "@/hooks/use-groups";
-import { useActiveGroupStore } from "@/lib/store/active-group";
+import { useActiveGroupQuery } from "@/hooks/use-groups";
 
 const StreakPlaceholderCard = () => (
   <Card>
@@ -40,12 +39,10 @@ const CalendarPlaceholderCard = () => (
 );
 
 const HomePage = () => {
-  const { data: groups, isLoading } = useGroupsQuery();
-  const activeGroupId = useActiveGroupStore((s) => s.activeGroupId);
+  const { groups, activeGroup, isLoading: isActiveGroupLoading } = useActiveGroupQuery();
   const [createOpen, setCreateOpen] = useState(false);
 
-  const hasGroups = !isLoading && groups && groups.length > 0;
-  const activeGroup = groups?.find((g) => g.id === activeGroupId);
+  const hasGroups = !isActiveGroupLoading && groups && groups.length > 0;
 
   return (
     <div className="flex gap-6 h-full">

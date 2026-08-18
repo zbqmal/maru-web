@@ -39,7 +39,14 @@ const mockSetActiveGroupId = jest.fn((id: string | null) => {
 });
 
 jest.mock("@/hooks/use-groups", () => ({
-  useGroupsQuery: () => mockGroupsQueryResult,
+  useActiveGroupQuery: () => ({
+    groups: mockGroupsQueryResult.data,
+    activeGroupId: mockActiveGroupId,
+    activeGroup: mockGroupsQueryResult.data?.find((group) => group.id === mockActiveGroupId) ?? null,
+    isLoading: mockGroupsQueryResult.isLoading,
+    isError: mockGroupsQueryResult.isError,
+    refetch: mockGroupsQueryResult.refetch,
+  }),
 }));
 
 jest.mock("@/lib/store/active-group", () => ({

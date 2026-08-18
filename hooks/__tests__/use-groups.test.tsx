@@ -2,7 +2,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { listGroups } from "@/lib/api/groups";
 import { getCurrentUser } from "@/lib/api/auth";
-import { useGroupsQuery } from "../use-groups";
+import { useActiveGroupQuery, useGroupsQuery } from "../use-groups";
 
 jest.mock("@/lib/api/groups", () => ({
   listGroups: jest.fn(),
@@ -15,6 +15,11 @@ jest.mock("@/lib/api/auth", () => ({
 
 const mockListGroups = listGroups as jest.MockedFunction<typeof listGroups>;
 const mockGetCurrentUser = getCurrentUser as jest.MockedFunction<typeof getCurrentUser>;
+
+jest.mock("@/lib/store/active-group", () => ({
+  useActiveGroupStore: (selector: (state: { activeGroupId: string | null }) => unknown) =>
+    selector({ activeGroupId: "g1" }),
+}));
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -62,5 +67,52 @@ describe("useGroupsQuery", () => {
 
     expect(mockListGroups).toHaveBeenCalledTimes(1);
     expect(result.current.data).toEqual([]);
+  });
+
+  it("derives the active group from the selected group id", async () => {
+    mockGetCurrentUser.mockResolvedValueOnce({
+      id: "u1",
+      email: "user@example.com",
+      name: "홍길동",
+      birthday: null,
+      profileImageKey: null,
+      createdAt: "2026-08-14T00:00:00.000Z",
+      updatedAt: "2026-08-14T00:00:00.000Z",
+    });
+    mockListGroups.mockResolvedValueOnce([
+      {
+        id: "g1",
+        name: "우리 가족",
+        createdAt: "2026-08-14T00:00:00.000Z",
+        updatedAt: "2026-08-14T00:00:00.000Z",
+        memberships: [],
+      },
+    ]);
+
+    const { result } = renderHook(() => useActiveGroupQuery(), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(mockListGroups).toHaveBeenCalledTimes(1));
+
+    expect(result.current.activeGroup?.name).toBe("우리 가족");
+    expect(result.current.activeGroupId).toBe("g1");
+  });
+
+  it("returns no active group when the selected id is not in the group list", async () => {
+    mockGetCurrentUser.mockResolvedValueOnce({
+      id: "u1",
+      email: "user@example.com",
+      name: "홍길동",
+      birthday: null,
+      profileImageKey: null,
+      createdAt: "2026-08-14T00:00:00.000Z",
+      updatedAt: "2026-08-14T00:00:00.000Z",
+    });
+    mockListGroups.mockResolvedValueOnce([]);
+
+    const { result } = renderHook(() => useActiveGroupQuery(), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(mockListGroups).toHaveBeenCalledTimes(1));
+
+    expect(result.current.activeGroup).toBeNull();
   });
 });

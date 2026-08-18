@@ -18,12 +18,12 @@ export const useGroupsQuery = () => {
 };
 
 export const useActiveGroupQuery = () => {
-  const { data: groups, isLoading, isError } = useGroupsQuery();
+  const { data: groups, isLoading, isError, refetch } = useGroupsQuery();
   const activeGroupId = useActiveGroupStore((s) => s.activeGroupId);
 
   const activeGroup = groups?.find((g) => g.id === activeGroupId) ?? null;
 
-  return { activeGroup, isLoading, isError };
+  return { groups, activeGroupId, activeGroup, isLoading, isError, refetch };
 };
 
 export const useCreateGroupMutation = () => {
