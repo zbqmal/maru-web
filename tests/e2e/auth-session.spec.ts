@@ -67,6 +67,18 @@ test("authenticated users are redirected away from auth pages and see their sess
                 profileImageKey: null,
               },
             },
+            {
+              id: "m2",
+              userId: "2",
+              role: "MEMBER",
+              createdAt: "2026-08-14T00:00:00.000Z",
+              updatedAt: "2026-08-14T00:00:00.000Z",
+              user: {
+                id: "2",
+                name: "다연",
+                profileImageKey: null,
+              },
+            },
           ],
         },
       ]),
@@ -78,7 +90,10 @@ test("authenticated users are redirected away from auth pages and see their sess
   await expect(page).toHaveURL(/\/home$/);
   await expect(page.getByRole("button", { name: "사용자 메뉴" })).toContainText("홍길동");
   await expect(page.getByRole("button", { name: "그룹 선택" })).toContainText("우리 가족");
-  await expect(page.getByText("멤버 1명")).toBeVisible();
+  await expect(page.getByText("멤버 2명")).toBeVisible();
+  await expect(page.getByText("홍길동 (나)")).toBeVisible();
+  await expect(page.getByText("다연")).toBeVisible();
+  await expect(page.getByLabel("그룹 리더")).toBeVisible();
 
   await page.getByRole("button", { name: "사용자 메뉴" }).click();
   await expect(page.getByText("user@example.com")).toBeVisible();

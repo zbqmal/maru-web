@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Plus, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useGroupsQuery } from "@/hooks/use-groups";
+import { useActiveGroupQuery } from "@/hooks/use-groups";
 import { useActiveGroupStore } from "@/lib/store/active-group";
 import type { Group } from "@/lib/api/groups";
 import CreateGroupDialog from "@/components/groups/create-group-dialog";
@@ -16,8 +16,7 @@ type GroupSelectorProps = {
 };
 
 const GroupSelector = ({ className }: GroupSelectorProps) => {
-  const { data: groups, isLoading, isError, refetch } = useGroupsQuery();
-  const activeGroupId = useActiveGroupStore((s) => s.activeGroupId);
+  const { groups, activeGroupId, isLoading, isError, refetch } = useActiveGroupQuery();
   const setActiveGroupId = useActiveGroupStore((s) => s.setActiveGroupId);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -96,7 +95,7 @@ const GroupSelector = ({ className }: GroupSelectorProps) => {
 
           {activeGroup && (
             <span className="ml-4 flex items-center gap-1 text-xs text-muted-foreground">
-              <span>👥</span>
+              <Users className="h-4 w-4" aria-hidden="true" />
               멤버 {activeGroup.memberships.length}명
             </span>
           )}

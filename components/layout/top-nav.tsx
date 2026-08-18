@@ -7,11 +7,9 @@ import { Bell, ChevronDown, LogOut, User } from "lucide-react";
 import Avatar from "@/components/ui/avatar";
 import type { AuthUser } from "@/lib/api/auth";
 import { logout } from "@/lib/api/auth";
-import { CURRENT_USER_QUERY_KEY } from "@/lib/auth/session";
 import { getErrorMessage } from "@/lib/api/errors";
 import UserMenuItem from "./user-menu-item";
 import GroupSelector from "../groups/group-selector";
-import { GROUPS_QUERY_KEY } from "@/hooks/use-groups";
 
 type TopNavProps = {
   currentUser: AuthUser;
@@ -28,8 +26,7 @@ const TopNav = ({ currentUser }: TopNavProps) => {
     onSuccess: async () => {
       setUserMenuOpen(false);
       setLogoutError(null);
-      queryClient.removeQueries({ queryKey: CURRENT_USER_QUERY_KEY });
-      queryClient.removeQueries({ queryKey: GROUPS_QUERY_KEY });
+      queryClient.clear();
       router.replace("/login");
       router.refresh();
     },

@@ -1,6 +1,7 @@
 import AuthLayout from "../layout";
 
-const mockRedirect = jest.fn((_path: string) => {
+const mockRedirect = jest.fn((path: string) => {
+  void path;
   throw new Error("NEXT_REDIRECT");
 });
 const mockHas = jest.fn();

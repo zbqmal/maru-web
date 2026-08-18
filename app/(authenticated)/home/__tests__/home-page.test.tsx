@@ -36,16 +36,15 @@ let mockGroupsQueryResult: {
 let mockActiveGroupId: string | null = null;
 
 jest.mock("@/hooks/use-groups", () => ({
-  useGroupsQuery: () => mockGroupsQueryResult,
+  useActiveGroupQuery: () => ({
+    groups: mockGroupsQueryResult.data,
+    activeGroupId: mockActiveGroupId,
+    activeGroup: mockGroupsQueryResult.data?.find((group) => group.id === mockActiveGroupId) ?? null,
+    isLoading: mockGroupsQueryResult.isLoading,
+    isError: mockGroupsQueryResult.isError,
+    refetch: mockGroupsQueryResult.refetch,
+  }),
   useCreateGroupMutation: () => ({ mutate: jest.fn(), isPending: false, error: null }),
-}));
-
-jest.mock("@/lib/store/active-group", () => ({
-  useActiveGroupStore: (selector: (s: { activeGroupId: string | null; setActiveGroupId: (id: string | null) => void }) => unknown) =>
-    selector({
-      activeGroupId: mockActiveGroupId,
-      setActiveGroupId: jest.fn(),
-    }),
 }));
 
 const renderWithQuery = (ui: React.ReactElement) => {
