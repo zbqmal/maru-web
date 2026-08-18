@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import TopNav from "../top-nav";
 import { GROUPS_QUERY_KEY } from "@/hooks/use-groups";
+import { CURRENT_USER_QUERY_KEY } from "@/lib/auth/session";
 
 const mockReplace = jest.fn();
 const mockRefresh = jest.fn();
@@ -80,6 +81,8 @@ describe("TopNav", () => {
     mockLogout.mockResolvedValueOnce(undefined);
     const { queryClient } = renderTopNav();
     queryClient.setQueryData(GROUPS_QUERY_KEY, [{ id: "g1", name: "우리 가족" }]);
+    queryClient.setQueryData(CURRENT_USER_QUERY_KEY, { id: "1", name: "홍길동" });
+    queryClient.setQueryData(["unrelated", "query"], { value: true });
 
     await user.click(screen.getByRole("button", { name: "사용자 메뉴" }));
     await user.click(screen.getByRole("button", { name: "로그아웃" }));
@@ -91,6 +94,8 @@ describe("TopNav", () => {
     });
 
     expect(queryClient.getQueryData(GROUPS_QUERY_KEY)).toBeUndefined();
+    expect(queryClient.getQueryData(CURRENT_USER_QUERY_KEY)).toBeUndefined();
+    expect(queryClient.getQueryData(["unrelated", "query"])).toBeUndefined();
   });
 
   it("shows a logout error when the request fails", async () => {
