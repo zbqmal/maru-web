@@ -115,6 +115,59 @@
         "tags": [
           "Groups"
         ]
+      },
+      "patch": {
+        "operationId": "GroupController_updateGroup",
+        "parameters": [
+          {
+            "name": "groupId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGroupDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated group",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required."
+          },
+          "403": {
+            "description": "Group leader role required."
+          },
+          "404": {
+            "description": "Group not found."
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Update a group (leader only)",
+        "tags": [
+          "Groups"
+        ]
       }
     },
     "/groups/{groupId}/members": {
@@ -160,6 +213,96 @@
           }
         ],
         "summary": "List group members",
+        "tags": [
+          "Groups"
+        ]
+      }
+    },
+    "/groups/{groupId}/transfer-leadership": {
+      "post": {
+        "operationId": "GroupController_transferLeadership",
+        "parameters": [
+          {
+            "name": "groupId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferLeadershipDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated group with new leader",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required."
+          },
+          "403": {
+            "description": "Group leader role required."
+          },
+          "404": {
+            "description": "Target member not found in group."
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Transfer group leadership (leader only)",
+        "tags": [
+          "Groups"
+        ]
+      }
+    },
+    "/groups/{groupId}/leave": {
+      "delete": {
+        "operationId": "GroupController_leaveGroup",
+        "parameters": [
+          {
+            "name": "groupId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successfully left the group."
+          },
+          "401": {
+            "description": "Authentication required."
+          },
+          "403": {
+            "description": "Group membership required."
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Leave a group",
         "tags": [
           "Groups"
         ]
@@ -472,6 +615,7 @@
         "properties": {
           "name": {
             "type": "string",
+            "description": "The name of the group",
             "example": "Family",
             "maxLength": 100
           }
@@ -563,6 +707,29 @@
           "createdAt",
           "updatedAt",
           "memberships"
+        ]
+      },
+      "UpdateGroupDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The updated name of the group",
+            "example": "Family",
+            "maxLength": 100
+          }
+        }
+      },
+      "TransferLeadershipDto": {
+        "type": "object",
+        "properties": {
+          "newLeaderId": {
+            "type": "string",
+            "description": "User ID of the member to promote to leader"
+          }
+        },
+        "required": [
+          "newLeaderId"
         ]
       },
       "RegisterDto": {
