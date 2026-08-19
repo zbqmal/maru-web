@@ -161,7 +161,8 @@ const GroupSelector = ({ className }: GroupSelectorProps) => {
                   }}
                   className="flex w-full items-center gap-2 px-4 py-2 text-sm text-destructive hover:bg-surface-muted transition-colors"
                 >
-                  <LogOut className="h-4 w-4 shrink-0" />그룹 나가기
+                  <LogOut className="h-4 w-4 shrink-0" />
+                  그룹 나가기
                 </button>
               )}
             </div>
