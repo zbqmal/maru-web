@@ -38,3 +38,13 @@ export const getGroup = (groupId: string) => apiRequest<Group>(`/groups/${groupI
 
 export const listGroupMembers = (groupId: string) =>
   apiRequest<GroupMember[]>(`/groups/${groupId}/members`);
+
+export const leaveGroup = (groupId: string) =>
+  apiRequest<void>(`/groups/${groupId}/leave`, { method: "DELETE" });
+
+export interface TransferLeadershipInput {
+  newLeaderId: string;
+}
+
+export const transferLeadership = (groupId: string, body: TransferLeadershipInput) =>
+  apiRequest<Group>(`/groups/${groupId}/transfer-leadership`, { method: "POST", body });
