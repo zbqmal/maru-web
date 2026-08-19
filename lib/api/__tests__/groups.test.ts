@@ -1,4 +1,4 @@
-import { listGroups, createGroup, getGroup, listGroupMembers } from "@/lib/api/groups";
+import { listGroups, createGroup, getGroup, listGroupMembers, deleteGroup } from "@/lib/api/groups";
 
 describe("groups api", () => {
   const originalFetch = global.fetch;
@@ -86,6 +86,20 @@ describe("groups api", () => {
     expect(global.fetch).toHaveBeenCalledWith(
       "http://localhost:3001/groups/g1/members",
       expect.objectContaining({ credentials: "include" })
+    );
+  });
+
+  it("deleteGroup calls DELETE /groups/:id", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue(createMockResponse({ ok: true, status: 204 }));
+
+    await deleteGroup("g1");
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://localhost:3001/groups/g1",
+      expect.objectContaining({
+        method: "DELETE",
+        credentials: "include",
+      })
     );
   });
 });

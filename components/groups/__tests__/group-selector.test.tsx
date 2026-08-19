@@ -10,14 +10,40 @@ const mockGroups: Group[] = [
     name: "우리 가족",
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01",
-    memberships: [],
+    memberships: [
+      {
+        id: "m1",
+        userId: "u1",
+        role: "LEADER",
+        createdAt: "2024-01-01",
+        updatedAt: "2024-01-01",
+        user: { id: "u1", name: "리더", profileImageKey: null },
+      },
+      {
+        id: "m2",
+        userId: "u2",
+        role: "MEMBER",
+        createdAt: "2024-01-01",
+        updatedAt: "2024-01-01",
+        user: { id: "u2", name: "멤버", profileImageKey: null },
+      },
+    ],
   },
   {
     id: "g2",
     name: "친구들",
     createdAt: "2024-01-02",
     updatedAt: "2024-01-02",
-    memberships: [],
+    memberships: [
+      {
+        id: "m3",
+        userId: "u1",
+        role: "MEMBER",
+        createdAt: "2024-01-02",
+        updatedAt: "2024-01-02",
+        user: { id: "u1", name: "리더", profileImageKey: null },
+      },
+    ],
   },
 ];
 
@@ -37,6 +63,7 @@ let mockActiveGroupId: string | null = "g1";
 const mockSetActiveGroupId = jest.fn((id: string | null) => {
   mockActiveGroupId = id;
 });
+let mockCurrentUserId = "u1";
 
 jest.mock("@/hooks/use-groups", () => ({
   useActiveGroupQuery: () => ({
@@ -60,6 +87,23 @@ jest.mock("@/components/groups/create-group-dialog", () => ({
     open ? <div data-testid="create-dialog">dialog</div> : null,
 }));
 
+jest.mock("@/components/groups/leave-group-dialog", () => ({
+  __esModule: true,
+  default: ({ open }: { open: boolean }) => (open ? <div data-testid="leave-dialog">dialog</div> : null),
+}));
+
+jest.mock("@/components/groups/delete-group-dialog", () => ({
+  __esModule: true,
+  default: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="delete-dialog">dialog</div> : null,
+}));
+
+jest.mock("@/hooks/use-current-user", () => ({
+  useCurrentUserQuery: () => ({
+    data: { id: mockCurrentUserId, email: "user@example.com", name: "테스터" },
+  }),
+}));
+
 const renderWithQuery = (ui: React.ReactElement) => {
   const qc = new QueryClient();
   return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>);
@@ -69,6 +113,7 @@ describe("GroupSelector", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockActiveGroupId = "g1";
+    mockCurrentUserId = "u1";
     mockGroupsQueryResult = {
       data: mockGroups,
       isLoading: false,
@@ -103,7 +148,7 @@ describe("GroupSelector", () => {
     renderWithQuery(<GroupSelector />);
     expect(screen.getByRole("button", { name: "그룹 선택" })).toHaveTextContent("우리 가족");
     expect(screen.getByRole("img", { name: "우리 가족" })).toHaveTextContent("우");
-    expect(screen.getByText("멤버 0명")).toBeInTheDocument();
+    expect(screen.getByText("멤버 2명")).toBeInTheDocument();
   });
 
   it("opens dropdown on click and lists groups", async () => {
@@ -145,5 +190,28 @@ describe("GroupSelector", () => {
     renderWithQuery(<GroupSelector />);
     await user.click(screen.getByRole("button", { name: "그룹 선택" }));
     expect(screen.getByText("속한 그룹이 없어요")).toBeInTheDocument();
+  });
+
+  it("shows delete action only when user is active-group leader", async () => {
+    const user = userEvent.setup();
+    const view = renderWithQuery(<GroupSelector />);
+    await user.click(screen.getByRole("button", { name: "그룹 선택" }));
+    expect(screen.getByRole("button", { name: "그룹 삭제" })).toBeInTheDocument();
+
+    view.unmount();
+    mockCurrentUserId = "u2";
+    renderWithQuery(<GroupSelector />);
+    await user.click(screen.getByRole("button", { name: "그룹 선택" }));
+    expect(screen.queryByRole("button", { name: "그룹 삭제" })).not.toBeInTheDocument();
+  });
+
+  it("opens delete dialog when delete action is clicked", async () => {
+    const user = userEvent.setup();
+    renderWithQuery(<GroupSelector />);
+    await user.click(screen.getByRole("button", { name: "그룹 선택" }));
+    await user.click(screen.getByRole("button", { name: "그룹 삭제" }));
+    await waitFor(() => {
+      expect(screen.getByTestId("delete-dialog")).toBeInTheDocument();
+    });
   });
 });

@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, LogOut, Plus, Users } from "lucide-react";
+import { ChevronDown, LogOut, Plus, Trash2, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useActiveGroupQuery } from "@/hooks/use-groups";
 import { useActiveGroupStore } from "@/lib/store/active-group";
 import type { Group } from "@/lib/api/groups";
 import CreateGroupDialog from "@/components/groups/create-group-dialog";
 import LeaveGroupDialog from "@/components/groups/leave-group-dialog";
+import DeleteGroupDialog from "@/components/groups/delete-group-dialog";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import ErrorState from "@/components/ui/error-state";
 import Avatar from "../ui/avatar";
@@ -24,6 +25,7 @@ const GroupSelector = ({ className }: GroupSelectorProps) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Auto-select the first group when groups load and no group is active
@@ -69,6 +71,12 @@ const GroupSelector = ({ className }: GroupSelectorProps) => {
   }
 
   const activeGroup: Group | undefined = groups?.find((g) => g.id === activeGroupId);
+  const isActiveGroupLeader =
+    !!activeGroup &&
+    !!currentUser &&
+    activeGroup.memberships.some(
+      (membership) => membership.userId === currentUser.id && membership.role === "LEADER"
+    );
 
   return (
     <>
@@ -165,6 +173,19 @@ const GroupSelector = ({ className }: GroupSelectorProps) => {
                   그룹 나가기
                 </button>
               )}
+              {isActiveGroupLeader && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    setDeleteOpen(true);
+                  }}
+                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-destructive hover:bg-surface-muted transition-colors"
+                >
+                  <Trash2 className="h-4 w-4 shrink-0" />
+                  그룹 삭제
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -175,6 +196,14 @@ const GroupSelector = ({ className }: GroupSelectorProps) => {
         <LeaveGroupDialog
           open={leaveOpen}
           onOpenChange={setLeaveOpen}
+          group={activeGroup}
+          currentUserId={currentUser.id}
+        />
+      )}
+      {activeGroup && currentUser && (
+        <DeleteGroupDialog
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
           group={activeGroup}
           currentUserId={currentUser.id}
         />
