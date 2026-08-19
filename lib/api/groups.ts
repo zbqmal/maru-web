@@ -29,6 +29,10 @@ export interface CreateGroupInput {
   name: string;
 }
 
+export interface TransferLeadershipInput {
+  newLeaderId: string;
+}
+
 export const listGroups = () => apiRequest<Group[]>("/groups");
 
 export const createGroup = (body: CreateGroupInput) =>
@@ -38,3 +42,9 @@ export const getGroup = (groupId: string) => apiRequest<Group>(`/groups/${groupI
 
 export const listGroupMembers = (groupId: string) =>
   apiRequest<GroupMember[]>(`/groups/${groupId}/members`);
+
+export const leaveGroup = (groupId: string) =>
+  apiRequest<void>(`/groups/${groupId}/leave`, { method: "DELETE" });
+
+export const transferLeadership = (groupId: string, body: TransferLeadershipInput) =>
+  apiRequest<Group>(`/groups/${groupId}/transfer-leadership`, { method: "POST", body });

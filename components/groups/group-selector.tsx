@@ -1,15 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, Plus, Users } from "lucide-react";
+import { ChevronDown, LogOut, Plus, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useActiveGroupQuery } from "@/hooks/use-groups";
 import { useActiveGroupStore } from "@/lib/store/active-group";
 import type { Group } from "@/lib/api/groups";
 import CreateGroupDialog from "@/components/groups/create-group-dialog";
+import LeaveGroupDialog from "@/components/groups/leave-group-dialog";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import ErrorState from "@/components/ui/error-state";
 import Avatar from "../ui/avatar";
+import { useCurrentUserQuery } from "@/hooks/use-current-user";
 
 type GroupSelectorProps = {
   className?: string;
@@ -18,8 +20,10 @@ type GroupSelectorProps = {
 const GroupSelector = ({ className }: GroupSelectorProps) => {
   const { groups, activeGroupId, isLoading, isError, refetch } = useActiveGroupQuery();
   const setActiveGroupId = useActiveGroupStore((s) => s.setActiveGroupId);
+  const { data: currentUser } = useCurrentUserQuery();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Auto-select the first group when groups load and no group is active
@@ -148,12 +152,33 @@ const GroupSelector = ({ className }: GroupSelectorProps) => {
               >
                 <Plus className="h-4 w-4 shrink-0" />새 그룹 만들기
               </button>
+              {activeGroup && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    setLeaveOpen(true);
+                  }}
+                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-destructive hover:bg-surface-muted transition-colors"
+                >
+                  <LogOut className="h-4 w-4 shrink-0" />
+                  그룹 나가기
+                </button>
+              )}
             </div>
           </div>
         )}
       </div>
 
       <CreateGroupDialog open={createOpen} onOpenChange={setCreateOpen} />
+      {activeGroup && currentUser && (
+        <LeaveGroupDialog
+          open={leaveOpen}
+          onOpenChange={setLeaveOpen}
+          group={activeGroup}
+          currentUserId={currentUser.id}
+        />
+      )}
     </>
   );
 };
