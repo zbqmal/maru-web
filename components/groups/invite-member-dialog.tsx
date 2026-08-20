@@ -12,16 +12,15 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useInviteMemberMutation } from "@/hooks/use-invitations";
+import { useInviteMemberMutation } from "@/hooks/use-groups";
 import { getErrorMessage } from "@/lib/api/errors";
+import { EMAIL_REGEX } from "@/lib/auth/auth";
 
 type InviteMemberDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   groupId: string;
 };
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const InviteMemberDialog = ({ open, onOpenChange, groupId }: InviteMemberDialogProps) => {
   const [email, setEmail] = useState("");

@@ -1,12 +1,13 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { listGroups } from "@/lib/api/groups";
+import { createInvitation, listGroups, type Invitation } from "@/lib/api/groups";
 import { getCurrentUser } from "@/lib/api/auth";
-import { useActiveGroupQuery, useGroupsQuery } from "../use-groups";
+import { useActiveGroupQuery, useGroupsQuery, useInviteMemberMutation } from "../use-groups";
 
 jest.mock("@/lib/api/groups", () => ({
   listGroups: jest.fn(),
   createGroup: jest.fn(),
+  createInvitation: jest.fn(),
 }));
 
 jest.mock("@/lib/api/auth", () => ({
@@ -14,7 +15,19 @@ jest.mock("@/lib/api/auth", () => ({
 }));
 
 const mockListGroups = listGroups as jest.MockedFunction<typeof listGroups>;
+const mockCreateInvitation = createInvitation as jest.MockedFunction<typeof createInvitation>;
 const mockGetCurrentUser = getCurrentUser as jest.MockedFunction<typeof getCurrentUser>;
+
+const GROUP_ID = "group-1";
+
+const makeInvitation = (): Invitation => ({
+  id: "inv-1",
+  groupId: GROUP_ID,
+  invitedEmail: "alice@example.com",
+  expiresAt: "2026-08-21T00:00:00.000Z",
+  acceptedAt: null,
+  createdAt: "2026-08-20T00:00:00.000Z",
+});
 
 jest.mock("@/lib/store/active-group", () => ({
   useActiveGroupStore: (selector: (state: { activeGroupId: string | null }) => unknown) =>
@@ -114,5 +127,38 @@ describe("useGroupsQuery", () => {
     await waitFor(() => expect(mockListGroups).toHaveBeenCalledTimes(1));
 
     expect(result.current.activeGroup).toBeNull();
+  });
+
+  describe("useInviteMemberMutation", () => {
+    it("calls createInvitation with the group id and email", async () => {
+      mockCreateInvitation.mockResolvedValueOnce(makeInvitation());
+
+      const { result } = renderHook(() => useInviteMemberMutation(GROUP_ID), {
+        wrapper: createWrapper(),
+      });
+
+      result.current.mutate({ email: "alice@example.com" });
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+      expect(mockCreateInvitation).toHaveBeenCalledWith(GROUP_ID, {
+        email: "alice@example.com",
+      });
+    });
+
+    it("exposes the API error", async () => {
+      const error = new Error("이미 초대된 이메일이에요.");
+      mockCreateInvitation.mockRejectedValueOnce(error);
+
+      const { result } = renderHook(() => useInviteMemberMutation(GROUP_ID), {
+        wrapper: createWrapper(),
+      });
+
+      result.current.mutate({ email: "taken@example.com" });
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+
+      expect(result.current.error).toBe(error);
+    });
   });
 });

@@ -8,7 +8,7 @@ import InviteMemberDialog from "../invite-member-dialog";
 const mockInvite = jest.fn();
 let mockIsPending = false;
 
-jest.mock("@/hooks/use-invitations", () => ({
+jest.mock("@/hooks/use-groups", () => ({
   useInviteMemberMutation: () => ({
     mutate: mockInvite,
     isPending: mockIsPending,
