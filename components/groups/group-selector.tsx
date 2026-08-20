@@ -5,7 +5,6 @@ import { ChevronDown, LogOut, Plus, Trash2, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useActiveGroupQuery } from "@/hooks/use-groups";
 import { useActiveGroupStore } from "@/lib/store/active-group";
-import type { Group } from "@/lib/api/groups";
 import CreateGroupDialog from "@/components/groups/create-group-dialog";
 import LeaveGroupDialog from "@/components/groups/leave-group-dialog";
 import DeleteGroupDialog from "@/components/groups/delete-group-dialog";
@@ -19,7 +18,7 @@ type GroupSelectorProps = {
 };
 
 const GroupSelector = ({ className }: GroupSelectorProps) => {
-  const { groups, activeGroupId, isLoading, isError, refetch } = useActiveGroupQuery();
+  const { groups, activeGroupId, activeGroup, isLoading, isError, refetch } = useActiveGroupQuery();
   const setActiveGroupId = useActiveGroupStore((s) => s.setActiveGroupId);
   const { data: currentUser } = useCurrentUserQuery();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -70,7 +69,6 @@ const GroupSelector = ({ className }: GroupSelectorProps) => {
     );
   }
 
-  const activeGroup: Group | undefined = groups?.find((g) => g.id === activeGroupId);
   const isActiveGroupLeader =
     !!activeGroup &&
     !!currentUser &&
