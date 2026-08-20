@@ -10,6 +10,8 @@ import {
   type Group,
   type CreateGroupInput,
   type TransferLeadershipInput,
+  CreateInvitationInput,
+  createInvitation,
 } from "@/lib/api/groups";
 import { useActiveGroupStore } from "@/lib/store/active-group";
 import { useCurrentUserQuery } from "@/hooks/use-current-user";
@@ -95,3 +97,8 @@ export const useTransferLeadershipMutation = () => {
     },
   });
 };
+
+export const useInviteMemberMutation = (groupId: string) =>
+  useMutation({
+    mutationFn: (input: CreateInvitationInput) => createInvitation(groupId, input),
+  });
