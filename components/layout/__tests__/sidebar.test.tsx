@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Sidebar from "../sidebar";
 import type { Group } from "@/lib/api/groups";
@@ -57,6 +58,14 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/home",
 }));
 
+jest.mock("@/components/groups/invite-member-dialog", () => ({
+  __esModule: true,
+  default: ({ open, onOpenChange, groupId }: { open: boolean; onOpenChange: (v: boolean) => void; groupId: string }) =>
+    open ? <div data-testid="invite-dialog" data-group-id={groupId}>
+      <button onClick={() => onOpenChange(false)}>close-invite</button>
+    </div> : null,
+}));
+
 const renderWithQuery = (ui: React.ReactElement) => {
   const qc = new QueryClient();
   return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>);
@@ -111,5 +120,56 @@ describe("Sidebar", () => {
   it("renders the member list landmark", () => {
     renderWithQuery(<Sidebar currentUser={mockCurrentUser} />);
     expect(screen.getByRole("list", { name: "그룹 멤버 목록" })).toBeInTheDocument();
+  });
+
+  it("shows the invite button for the group leader", () => {
+    renderWithQuery(<Sidebar currentUser={mockCurrentUser} />);
+    expect(screen.getByRole("button", { name: "멤버 초대" })).toBeInTheDocument();
+  });
+
+  it("does not show the invite button for a regular member", () => {
+    mockActiveGroupQueryResult = {
+      activeGroup: {
+        ...mockGroup,
+        memberships: [
+          {
+            id: "m1",
+            userId: "u1",
+            role: "MEMBER",
+            createdAt: "2024-01-01",
+            updatedAt: "2024-01-01",
+            user: { id: "u1", name: "홍길동", profileImageKey: null },
+          },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+    };
+    renderWithQuery(<Sidebar currentUser={mockCurrentUser} />);
+    expect(screen.queryByRole("button", { name: "멤버 초대" })).not.toBeInTheDocument();
+  });
+
+  it("does not show the invite button when there is no active group", () => {
+    mockActiveGroupQueryResult = { activeGroup: null, isLoading: false, isError: false };
+    renderWithQuery(<Sidebar currentUser={mockCurrentUser} />);
+    expect(screen.queryByRole("button", { name: "멤버 초대" })).not.toBeInTheDocument();
+  });
+
+  it("opens the invite dialog when the invite button is clicked", async () => {
+    const user = userEvent.setup();
+    renderWithQuery(<Sidebar currentUser={mockCurrentUser} />);
+    expect(screen.queryByTestId("invite-dialog")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "멤버 초대" }));
+    expect(screen.getByTestId("invite-dialog")).toBeInTheDocument();
+    expect(screen.getByTestId("invite-dialog")).toHaveAttribute("data-group-id", "g1");
+  });
+
+  it("closes the invite dialog when the dialog signals close", async () => {
+    const user = userEvent.setup();
+    renderWithQuery(<Sidebar currentUser={mockCurrentUser} />);
+    await user.click(screen.getByRole("button", { name: "멤버 초대" }));
+    expect(screen.getByTestId("invite-dialog")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "close-invite" }));
+    expect(screen.queryByTestId("invite-dialog")).not.toBeInTheDocument();
   });
 });

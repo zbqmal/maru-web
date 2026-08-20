@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, CalendarDays, HelpCircle, Plus } from "lucide-react";
@@ -7,6 +8,7 @@ import { cn } from "@/lib/utils";
 import Avatar from "@/components/ui/avatar";
 import type { AuthUser } from "@/lib/api/auth";
 import { useActiveGroupQuery } from "@/hooks/use-groups";
+import InviteMemberDialog from "@/components/groups/invite-member-dialog";
 
 const NAV_ITEMS = [
   { href: "/diary", label: "오늘의 다이어리", icon: Home },
@@ -21,6 +23,7 @@ type SidebarProps = {
 const Sidebar = ({ currentUser }: SidebarProps) => {
   const pathname = usePathname();
   const { activeGroup, isLoading } = useActiveGroupQuery();
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const members = activeGroup
     ? activeGroup.memberships.map((m) => ({
@@ -33,7 +36,11 @@ const Sidebar = ({ currentUser }: SidebarProps) => {
       }))
     : [];
 
+  const currentMember = activeGroup?.memberships.find((m) => m.userId === currentUser.id);
+  const isLeader = currentMember?.role === "LEADER";
+
   return (
+    <>
     <aside className="flex h-full w-52 shrink-0 flex-col border-r border-border bg-surface">
       {/* Logo */}
       <div className="px-5 pt-6 pb-4">
@@ -72,12 +79,15 @@ const Sidebar = ({ currentUser }: SidebarProps) => {
           <p className="text-xs font-semibold uppercase tracking-wider text-muted">
             함께하는 사람들
           </p>
-          <button
-            aria-label="그룹원 추가"
-            className="rounded-full border border-border p-0.5 text-muted hover:bg-surface-muted"
-          >
-            <Plus className="h-3.5 w-3.5" />
-          </button>
+          {isLeader && activeGroup && (
+            <button
+              aria-label="멤버 초대"
+              onClick={() => setInviteOpen(true)}
+              className="rounded-full border border-border p-0.5 text-muted hover:bg-surface-muted"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
 
         {isLoading ? (
@@ -117,6 +127,15 @@ const Sidebar = ({ currentUser }: SidebarProps) => {
         <p className="mt-1 text-base">🪴</p>
       </div>
     </aside>
+
+      {isLeader && activeGroup && (
+        <InviteMemberDialog
+          open={inviteOpen}
+          onOpenChange={setInviteOpen}
+          groupId={activeGroup.id}
+        />
+      )}
+    </>
   );
 };
 
