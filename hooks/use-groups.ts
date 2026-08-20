@@ -3,9 +3,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createGroup,
+  deleteGroup,
   leaveGroup,
   listGroups,
   transferLeadership,
+  type Group,
   type CreateGroupInput,
   type TransferLeadershipInput,
 } from "@/lib/api/groups";
@@ -48,7 +50,7 @@ export const useCreateGroupMutation = () => {
 
 export const useLeaveGroupMutation = () => {
   const queryClient = useQueryClient();
-  const { activeGroupId } = useActiveGroupQuery();
+  const activeGroupId = useActiveGroupStore((s) => s.activeGroupId);
   const setActiveGroupId = useActiveGroupStore((s) => s.setActiveGroupId);
 
   return useMutation({
@@ -58,6 +60,25 @@ export const useLeaveGroupMutation = () => {
       // Clear active group if user just left it
       if (activeGroupId === groupId) {
         setActiveGroupId(null);
+      }
+    },
+  });
+};
+
+export const useDeleteGroupMutation = () => {
+  const queryClient = useQueryClient();
+  const activeGroupId = useActiveGroupStore((s) => s.activeGroupId);
+  const setActiveGroupId = useActiveGroupStore((s) => s.setActiveGroupId);
+
+  return useMutation({
+    mutationFn: (groupId: string) => deleteGroup(groupId),
+    onSuccess: async (_data, groupId) => {
+      const cachedGroups = queryClient.getQueryData<Group[]>(GROUPS_QUERY_KEY) ?? [];
+      await queryClient.invalidateQueries({ queryKey: GROUPS_QUERY_KEY });
+
+      if (activeGroupId === groupId) {
+        const fallbackGroup = cachedGroups.find((group) => group.id !== groupId) ?? null;
+        setActiveGroupId(fallbackGroup?.id ?? null);
       }
     },
   });

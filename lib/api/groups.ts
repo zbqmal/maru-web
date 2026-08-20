@@ -46,5 +46,8 @@ export const listGroupMembers = (groupId: string) =>
 export const leaveGroup = (groupId: string) =>
   apiRequest<void>(`/groups/${groupId}/leave`, { method: "DELETE" });
 
+export const deleteGroup = (groupId: string) =>
+  apiRequest<void>(`/groups/${groupId}`, { method: "DELETE" });
+
 export const transferLeadership = (groupId: string, body: TransferLeadershipInput) =>
   apiRequest<Group>(`/groups/${groupId}/transfer-leadership`, { method: "POST", body });
