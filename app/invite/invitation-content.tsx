@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Users, CheckCircle, Clock, AlertCircle, XCircle } from "lucide-react";
+import { Users, AlertCircle, Clock, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { useCurrentUserQuery } from "@/hooks/use-current-user";
@@ -30,7 +30,7 @@ const getInvitationErrorState = (
     }
     if (error.status === 409) {
       return {
-        icon: <CheckCircle className="h-12 w-12 text-green-500" aria-hidden="true" />,
+        icon: <AlertCircle className="h-12 w-12 text-amber-500" aria-hidden="true" />,
         title: "이미 사용된 초대 링크예요",
         description: "이 초대 링크는 이미 사용되었어요. 로그인 후 그룹을 확인해보세요.",
       };
