@@ -119,7 +119,7 @@ describe("InvitationContent", () => {
   describe("valid invitation — authenticated user", () => {
     it("shows group name and invited email", () => {
       renderWithQuery(<InvitationContent />);
-      expect(screen.getByText("우리 가족")).toBeInTheDocument();
+      expect(screen.getAllByText("우리 가족").length).toBeGreaterThan(0);
       expect(screen.getByText(/alice@example\.com/)).toBeInTheDocument();
     });
 
