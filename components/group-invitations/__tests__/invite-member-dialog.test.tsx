@@ -23,9 +23,7 @@ const renderWithQuery = (ui: React.ReactElement) => {
 };
 
 const renderDialog = (open = true, onOpenChange = jest.fn(), groupId = "g1") =>
-  renderWithQuery(
-    <InviteMemberDialog open={open} onOpenChange={onOpenChange} groupId={groupId} />
-  );
+  renderWithQuery(<InviteMemberDialog open={open} onOpenChange={onOpenChange} groupId={groupId} />);
 
 // ── tests ─────────────────────────────────────────────────────────────────────
 
@@ -77,11 +75,9 @@ describe("InviteMemberDialog", () => {
 
   it("shows success state after successful invite", async () => {
     const user = userEvent.setup();
-    mockInvite.mockImplementation(
-      (_input: unknown, options: { onSuccess: () => void }) => {
-        options.onSuccess();
-      }
-    );
+    mockInvite.mockImplementation((_input: unknown, options: { onSuccess: () => void }) => {
+      options.onSuccess();
+    });
 
     renderDialog();
     await user.type(screen.getByLabelText("이메일 주소"), "alice@example.com");
@@ -95,11 +91,9 @@ describe("InviteMemberDialog", () => {
 
   it("shows error message when invite fails", async () => {
     const user = userEvent.setup();
-    mockInvite.mockImplementation(
-      (_input: unknown, options: { onError: (err: Error) => void }) => {
-        options.onError(new Error("이미 초대된 이메일이에요."));
-      }
-    );
+    mockInvite.mockImplementation((_input: unknown, options: { onError: (err: Error) => void }) => {
+      options.onError(new Error("이미 초대된 이메일이에요."));
+    });
 
     renderDialog();
     await user.type(screen.getByLabelText("이메일 주소"), "taken@example.com");
@@ -146,11 +140,9 @@ describe("InviteMemberDialog", () => {
   it("resets form when reopened after success", async () => {
     const user = userEvent.setup();
     const onOpenChange = jest.fn();
-    mockInvite.mockImplementation(
-      (_input: unknown, options: { onSuccess: () => void }) => {
-        options.onSuccess();
-      }
-    );
+    mockInvite.mockImplementation((_input: unknown, options: { onSuccess: () => void }) => {
+      options.onSuccess();
+    });
 
     const { rerender } = renderWithQuery(
       <InviteMemberDialog open={true} onOpenChange={onOpenChange} groupId="g1" />

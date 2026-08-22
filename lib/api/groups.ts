@@ -67,3 +67,20 @@ export const transferLeadership = (groupId: string, body: TransferLeadershipInpu
 
 export const createInvitation = (groupId: string, body: CreateInvitationInput) =>
   apiRequest<Invitation>(`/groups/${groupId}/invitations`, { method: "POST", body });
+
+export interface InvitationValidation {
+  id: string;
+  groupId: string;
+  groupName: string;
+  invitedEmail: string;
+  expiresAt: string;
+  createdAt: string;
+}
+
+export const validateInvitation = (token: string) =>
+  apiRequest<InvitationValidation>(
+    `/group-invitations/validate?token=${encodeURIComponent(token)}`
+  );
+
+export const acceptInvitation = (token: string) =>
+  apiRequest<Group>(`/group-invitations/accept`, { method: "POST", body: { token } });

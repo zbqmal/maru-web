@@ -12,6 +12,8 @@ import {
   type TransferLeadershipInput,
   CreateInvitationInput,
   createInvitation,
+  validateInvitation,
+  acceptInvitation,
 } from "@/lib/api/groups";
 import { useActiveGroupStore } from "@/lib/store/active-group";
 import { useCurrentUserQuery } from "@/hooks/use-current-user";
@@ -102,3 +104,27 @@ export const useInviteMemberMutation = (groupId: string) =>
   useMutation({
     mutationFn: (input: CreateInvitationInput) => createInvitation(groupId, input),
   });
+
+export const INVITATION_VALIDATE_QUERY_KEY = (token: string) =>
+  ["invitation", "validate", token] as const;
+
+export const useValidateInvitationQuery = (token: string) =>
+  useQuery({
+    queryKey: INVITATION_VALIDATE_QUERY_KEY(token),
+    queryFn: () => validateInvitation(token),
+    enabled: !!token,
+    retry: false,
+  });
+
+export const useAcceptInvitationMutation = () => {
+  const queryClient = useQueryClient();
+  const setActiveGroupId = useActiveGroupStore((s) => s.setActiveGroupId);
+
+  return useMutation({
+    mutationFn: (token: string) => acceptInvitation(token),
+    onSuccess: async (group) => {
+      await queryClient.invalidateQueries({ queryKey: GROUPS_QUERY_KEY });
+      setActiveGroupId(group.id);
+    },
+  });
+};
