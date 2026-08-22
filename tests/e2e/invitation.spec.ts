@@ -56,17 +56,14 @@ test("unauthenticated user with valid invite is redirected to login and can retu
     await route.fulfill({ status: 401, headers: apiHeaders, body: JSON.stringify({}) });
   });
 
-  await page.route(
-    "http://127.0.0.1:3001/group-invitations/validate*",
-    async (route) => {
-      await route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify(invitation) });
-    }
-  );
+  await page.route("http://127.0.0.1:3001/group-invitations/validate*", async (route) => {
+    await route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify(invitation) });
+  });
 
-  await page.goto("/invite?token=valid-token-123");
+  await page.goto("/invitations/accept?token=valid-token-123");
 
   // Should be redirected to login preserving the next param
-  await expect(page).toHaveURL(/\/login\?next=.*invite.*token/);
+  await expect(page).toHaveURL(/\/login\?next=.*invitations%2Faccept.*token/);
   await expect(page.getByRole("heading", { name: "로그인" })).toBeVisible();
 });
 
@@ -77,12 +74,9 @@ test("authenticated user sees invitation card and can accept", async ({ context,
     await route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify(me) });
   });
 
-  await page.route(
-    "http://127.0.0.1:3001/group-invitations/validate*",
-    async (route) => {
-      await route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify(invitation) });
-    }
-  );
+  await page.route("http://127.0.0.1:3001/group-invitations/validate*", async (route) => {
+    await route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify(invitation) });
+  });
 
   let acceptCalled = false;
   await page.route("http://127.0.0.1:3001/group-invitations/accept", async (route) => {
@@ -94,10 +88,10 @@ test("authenticated user sees invitation card and can accept", async ({ context,
     await route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify([joinedGroup]) });
   });
 
-  await page.goto("/invite?token=valid-token-123");
+  await page.goto("/invitations/accept?token=valid-token-123");
 
   // Invitation card
-  await expect(page.getByText("우리 가족")).toBeVisible();
+  await expect(page.getByText("우리 가족").first()).toBeVisible();
   await expect(page.getByText(/alice@example\.com/)).toBeVisible();
   await expect(page.getByRole("button", { name: "그룹 참가하기" })).toBeEnabled();
 
@@ -115,14 +109,15 @@ test("shows not-found state for invalid (404) invite token", async ({ context, p
     await route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify(me) });
   });
 
-  await page.route(
-    "http://127.0.0.1:3001/group-invitations/validate*",
-    async (route) => {
-      await route.fulfill({ status: 404, headers: apiHeaders, body: JSON.stringify({ message: "Not found" }) });
-    }
-  );
+  await page.route("http://127.0.0.1:3001/group-invitations/validate*", async (route) => {
+    await route.fulfill({
+      status: 404,
+      headers: apiHeaders,
+      body: JSON.stringify({ message: "Not found" }),
+    });
+  });
 
-  await page.goto("/invite?token=bad-token");
+  await page.goto("/invitations/accept?token=bad-token");
 
   await expect(page.getByText("초대 링크를 찾을 수 없어요")).toBeVisible();
 });
@@ -134,14 +129,15 @@ test("shows expired state for 410 invite token", async ({ context, page }) => {
     await route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify(me) });
   });
 
-  await page.route(
-    "http://127.0.0.1:3001/group-invitations/validate*",
-    async (route) => {
-      await route.fulfill({ status: 410, headers: apiHeaders, body: JSON.stringify({ message: "Gone" }) });
-    }
-  );
+  await page.route("http://127.0.0.1:3001/group-invitations/validate*", async (route) => {
+    await route.fulfill({
+      status: 410,
+      headers: apiHeaders,
+      body: JSON.stringify({ message: "Gone" }),
+    });
+  });
 
-  await page.goto("/invite?token=expired-token");
+  await page.goto("/invitations/accept?token=expired-token");
 
   await expect(page.getByText("초대 링크가 만료되었어요")).toBeVisible();
 });
@@ -153,14 +149,15 @@ test("shows already-used state for 409 invite token", async ({ context, page }) 
     await route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify(me) });
   });
 
-  await page.route(
-    "http://127.0.0.1:3001/group-invitations/validate*",
-    async (route) => {
-      await route.fulfill({ status: 409, headers: apiHeaders, body: JSON.stringify({ message: "Conflict" }) });
-    }
-  );
+  await page.route("http://127.0.0.1:3001/group-invitations/validate*", async (route) => {
+    await route.fulfill({
+      status: 409,
+      headers: apiHeaders,
+      body: JSON.stringify({ message: "Conflict" }),
+    });
+  });
 
-  await page.goto("/invite?token=used-token");
+  await page.goto("/invitations/accept?token=used-token");
 
   await expect(page.getByText("이미 사용된 초대 링크예요")).toBeVisible();
   await expect(page.getByRole("link", { name: "로그인하기" })).toBeVisible();
@@ -171,7 +168,7 @@ test("shows invalid-link message when token is missing from URL", async ({ page 
     await route.fulfill({ status: 401, headers: apiHeaders, body: JSON.stringify({}) });
   });
 
-  await page.goto("/invite");
+  await page.goto("/invitations/accept");
 
   await expect(page.getByText("초대 링크가 올바르지 않아요")).toBeVisible();
 });
@@ -183,14 +180,11 @@ test("shows MARU branding on all invitation page states", async ({ context, page
     await route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify(me) });
   });
 
-  await page.route(
-    "http://127.0.0.1:3001/group-invitations/validate*",
-    async (route) => {
-      await route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify(invitation) });
-    }
-  );
+  await page.route("http://127.0.0.1:3001/group-invitations/validate*", async (route) => {
+    await route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify(invitation) });
+  });
 
-  await page.goto("/invite?token=valid-token-123");
+  await page.goto("/invitations/accept?token=valid-token-123");
 
-  await expect(page.getByText("MARU")).toBeVisible();
+  await expect(page.getByText("MARU").first()).toBeVisible();
 });

@@ -110,7 +110,7 @@ describe("InvitationContent", () => {
       renderWithQuery(<InvitationContent />);
       await waitFor(() => {
         expect(mockReplace).toHaveBeenCalledWith(
-          "/login?next=%2Finvite%3Ftoken%3Dvalid-token-123"
+          "/login?next=%2Finvitations%2Faccept%3Ftoken%3Dvalid-token-123"
         );
       });
     });

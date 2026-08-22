@@ -4,11 +4,13 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Users, AlertCircle, Clock, XCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { buttonVariants, Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { useCurrentUserQuery } from "@/hooks/use-current-user";
 import { useValidateInvitationQuery, useAcceptInvitationMutation } from "@/hooks/use-groups";
 import { ApiError, getErrorMessage } from "@/lib/api/errors";
+import InvitationShell from "@/components/group-invitations/invitation-shell";
 
 const getInvitationErrorState = (
   error: unknown
@@ -55,12 +57,16 @@ const InvitationContent = () => {
     error: invitationError,
   } = useValidateInvitationQuery(token);
 
-  const { mutate: accept, isPending: isAccepting, error: acceptError } = useAcceptInvitationMutation();
+  const {
+    mutate: accept,
+    isPending: isAccepting,
+    error: acceptError,
+  } = useAcceptInvitationMutation();
 
   const isAuthenticated = !isUserLoading && !!currentUser;
   const isLoading = isUserLoading || isInvitationLoading;
 
-  const inviteDestination = `/invite?token=${encodeURIComponent(token)}`;
+  const inviteDestination = `/invitations/accept?token=${encodeURIComponent(token)}`;
 
   useEffect(() => {
     if (!isLoading && invitation && !isAuthenticated) {
@@ -112,9 +118,9 @@ const InvitationContent = () => {
             <p className="mt-1 text-sm text-muted-foreground">{description}</p>
           </div>
           {invitationError instanceof ApiError && invitationError.status === 409 && (
-            <Button asChild variant="outline" className="mt-2">
-              <Link href="/login">로그인하기</Link>
-            </Button>
+            <Link href="/login" className={cn(buttonVariants({ variant: "outline" }), "mt-2")}>
+              로그인하기
+            </Link>
           )}
         </div>
       </InvitationShell>
@@ -163,12 +169,7 @@ const InvitationContent = () => {
           </p>
         )}
 
-        <Button
-          size="lg"
-          className="w-full"
-          onClick={handleAccept}
-          disabled={isAccepting}
-        >
+        <Button size="lg" className="w-full" onClick={handleAccept} disabled={isAccepting}>
           {isAccepting ? "참가 중..." : "그룹 참가하기"}
         </Button>
       </div>
@@ -177,16 +178,3 @@ const InvitationContent = () => {
 };
 
 export default InvitationContent;
-
-const InvitationShell = ({ children }: { children: React.ReactNode }) => (
-  <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 py-12">
-    <div className="mb-8 text-center">
-      <p className="text-2xl font-bold text-foreground">MARU</p>
-      <p className="mt-1 text-sm text-muted-foreground">우리의 하루를, 함께</p>
-    </div>
-    <div className="w-full max-w-sm rounded-2xl border border-border bg-surface p-8 shadow-sm">
-      {children}
-    </div>
-    <footer className="mt-8 text-xs text-muted-foreground">© 2026 MARU. All rights reserved.</footer>
-  </div>
-);

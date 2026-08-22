@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import Avatar from "@/components/ui/avatar";
 import type { AuthUser } from "@/lib/api/auth";
 import { useActiveGroupQuery } from "@/hooks/use-groups";
-import InviteMemberDialog from "@/components/groups/invite-member-dialog";
+import InviteMemberDialog from "@/components/group-invitations/invite-member-dialog";
 
 const NAV_ITEMS = [
   { href: "/diary", label: "오늘의 다이어리", icon: Home },

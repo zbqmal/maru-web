@@ -58,7 +58,7 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/home",
 }));
 
-jest.mock("@/components/groups/invite-member-dialog", () => ({
+jest.mock("@/components/group-invitations/invite-member-dialog", () => ({
   __esModule: true,
   default: ({ open, onOpenChange, groupId }: { open: boolean; onOpenChange: (v: boolean) => void; groupId: string }) =>
     open ? <div data-testid="invite-dialog" data-group-id={groupId}>
