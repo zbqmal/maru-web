@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -26,6 +26,8 @@ type AddEditQuestionDialogProps = {
 
 const MAX_LENGTH = 200;
 
+// Rendered with a stable key from the parent so state resets on each open
+// without a synchronous setState-in-effect pattern.
 const AddEditQuestionDialog = ({
   open,
   onOpenChange,
@@ -36,10 +38,6 @@ const AddEditQuestionDialog = ({
   onSubmit,
 }: AddEditQuestionDialogProps) => {
   const [value, setValue] = useState(initialValue);
-
-  useEffect(() => {
-    if (open) setValue(initialValue);
-  }, [open, initialValue]);
 
   const handleClose = () => {
     if (!isPending) onOpenChange(false);

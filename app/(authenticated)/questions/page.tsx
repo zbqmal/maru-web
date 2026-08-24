@@ -284,6 +284,7 @@ const QuestionsPage = () => {
 
       {/* Dialogs */}
       <AddEditQuestionDialog
+        key={addOpen ? "add-open" : "add-closed"}
         open={addOpen}
         onOpenChange={setAddOpen}
         mode="add"
@@ -293,6 +294,7 @@ const QuestionsPage = () => {
       />
 
       <AddEditQuestionDialog
+        key={editTarget ? `edit-${editTarget.id}` : "edit-closed"}
         open={!!editTarget}
         onOpenChange={(open) => {
           if (!open) setEditTarget(null);

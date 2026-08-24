@@ -33,7 +33,7 @@ const memberUser = {
   updatedAt: "2026-01-01T00:00:00.000Z",
 };
 
-const makeGroup = (leaderUserId = "u1") => ({
+const makeGroup = () => ({
   id: "g1",
   name: "우리 가족",
   createdAt: "2026-01-01T00:00:00.000Z",

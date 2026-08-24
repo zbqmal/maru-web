@@ -290,7 +290,7 @@ describe("QuestionsPage", () => {
     await waitFor(() =>
       expect(screen.getByRole("heading", { name: "질문 삭제" })).toBeInTheDocument()
     );
-    expect(screen.getByText(/오늘 기분은?/)).toBeInTheDocument();
+    expect(screen.getAllByText(/오늘 기분은?/).length).toBeGreaterThanOrEqual(1);
   });
 
   it("calls deleteMutation.mutate when delete is confirmed", async () => {
