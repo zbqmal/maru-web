@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,21 +27,9 @@ const DeleteQuestionDialog = ({
   error,
   onConfirm,
 }: DeleteQuestionDialogProps) => {
-  const [localError, setLocalError] = useState<string | null>(null);
-
   const handleClose = () => {
-    if (!isPending) {
-      setLocalError(null);
-      onOpenChange(false);
-    }
+    if (!isPending) onOpenChange(false);
   };
-
-  const handleConfirm = () => {
-    setLocalError(null);
-    onConfirm();
-  };
-
-  const displayError = error?.message ?? localError;
 
   return (
     <Dialog open={open} onClose={handleClose} titleId="delete-question-title">
@@ -58,16 +45,16 @@ const DeleteQuestionDialog = ({
           <p className="rounded-lg border border-border bg-surface-muted px-4 py-3 text-sm text-foreground">
             &ldquo;{question}&rdquo;
           </p>
-          {displayError && (
+          {error?.message && (
             <p className="text-xs text-destructive" role="alert">
-              {displayError}
+              {error.message}
             </p>
           )}
           <DialogFooter className="mt-0">
             <Button type="button" variant="outline" onClick={handleClose} disabled={isPending}>
               취소
             </Button>
-            <Button variant="destructive" onClick={handleConfirm} disabled={isPending}>
+            <Button variant="destructive" onClick={onConfirm} disabled={isPending}>
               {isPending ? "삭제 중..." : "삭제"}
             </Button>
           </DialogFooter>
