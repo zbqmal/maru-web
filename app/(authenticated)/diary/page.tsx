@@ -1,15 +1,135 @@
+"use client";
+
+import Avatar from "@/components/ui/avatar";
 import EmptyState from "@/components/ui/empty-state";
+import ErrorState from "@/components/ui/error-state";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useCurrentUserQuery } from "@/hooks/use-current-user";
+import { useDiaryContextQuery } from "@/hooks/use-diary-context";
+import { useActiveGroupQuery } from "@/hooks/use-groups";
+
+const getLocalDateString = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 const DiaryPage = () => {
+  const { data: currentUser } = useCurrentUserQuery();
+  const { activeGroup } = useActiveGroupQuery();
+  const date = getLocalDateString();
+  const { data, isLoading, isError, refetch } = useDiaryContextQuery(activeGroup?.id ?? null, date);
+
+  const answeredQuestionIds = new Set(
+    (data?.entry?.answers ?? [])
+      .filter((answer) => answer.questionType === "CUSTOM" && answer.groupQuestionId)
+      .map((answer) => answer.groupQuestionId)
+  );
+
+  const questions = data?.questions ?? [];
+
   return (
-    <div>
-      <h1 className="mb-1 text-xl font-bold">오늘의 다이어리</h1>
-      <p className="mb-6 text-sm text-muted-foreground">오늘도 기록해볼까요? ☀️</p>
-      <EmptyState
-        icon="📖"
-        title="아직 오늘의 기록이 없어요"
-        description="질문에 답하며 오늘 하루를 기록해 보세요."
-      />
+    <div className="flex gap-6">
+      <div className="min-w-0 flex-1">
+        <div className="mb-6">
+          <h1 className="mb-1 text-xl font-bold">오늘의 다이어리</h1>
+          <p className="text-sm text-muted-foreground">오늘도 기록해볼까요? ☀️</p>
+        </div>
+
+        {!activeGroup ? (
+          <Card>
+            <CardContent className="p-0">
+              <EmptyState
+                icon="📖"
+                title="그룹을 먼저 선택해주세요"
+                description="그룹을 선택하면 오늘의 질문을 확인할 수 있어요."
+              />
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center justify-between gap-4">
+                  <span>{activeGroup.name}</span>
+                  <span className="text-sm font-medium text-muted-foreground">{date}</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  멤버 {activeGroup.memberships.length}명과 함께 오늘의 질문에 답해보세요.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="mt-4">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">오늘의 질문</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <LoadingSpinner label="오늘의 다이어리를 불러오는 중..." />
+                ) : isError ? (
+                  <ErrorState description="오늘의 질문을 불러오지 못했어요." onRetry={() => void refetch()} />
+                ) : questions.length === 0 ? (
+                  <EmptyState
+                    icon="💬"
+                    title="아직 활성화된 질문이 없어요"
+                    description="그룹 리더가 질문을 추가하면 여기에 보여요."
+                    className="py-10"
+                  />
+                ) : (
+                  <ul aria-label="오늘의 질문 목록" className="flex flex-col gap-2">
+                    {questions.map((question, index) => (
+                      <li
+                        key={question.id}
+                        className="rounded-lg border border-border bg-background px-4 py-3"
+                      >
+                        <div className="mb-1 flex items-center justify-between gap-2">
+                          <span className="text-xs font-semibold text-muted-foreground">
+                            질문 {index + 1}
+                          </span>
+                          {answeredQuestionIds.has(question.id) && (
+                            <span className="text-xs font-medium text-primary">작성 완료</span>
+                          )}
+                        </div>
+                        <p className="text-sm text-foreground">{question.question}</p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          </>
+        )}
+      </div>
+
+      {activeGroup && (
+        <aside aria-label="멤버 사이드바" className="hidden w-64 shrink-0 lg:block">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">오늘 함께 기록하는 멤버</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul aria-label="오늘의 멤버 목록" className="flex flex-col gap-2">
+                {activeGroup.memberships.map((membership) => (
+                  <li key={membership.id} className="flex items-center gap-2 text-sm">
+                    <Avatar fallback={membership.user.name} size="sm" />
+                    <span className="truncate text-foreground">
+                      {membership.user.name}
+                      {membership.userId === currentUser?.id && " (나)"}
+                    </span>
+                    {membership.role === "LEADER" && <span aria-label="그룹 리더">👑</span>}
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </aside>
+      )}
     </div>
   );
 };
