@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page, type Route } from "@playwright/test";
 
 const apiHeaders = {
   "access-control-allow-origin": "http://127.0.0.1:3000",
@@ -69,17 +69,14 @@ const makeQuestion = (id: string, question: string, displayOrder: number) => ({
   updatedAt: "2026-01-01T00:00:00.000Z",
 });
 
-const setupLeaderRoutes = async (
-  page: Parameters<Parameters<typeof test>[1]>[0]["page"],
-  questions: ReturnType<typeof makeQuestion>[]
-) => {
-  await page.route("http://127.0.0.1:3001/me", (route) =>
+const setupLeaderRoutes = async (page: Page, questions: ReturnType<typeof makeQuestion>[]) => {
+  await page.route("http://127.0.0.1:3001/me", (route: Route) =>
     route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify(leaderUser) })
   );
-  await page.route("http://127.0.0.1:3001/groups", (route) =>
+  await page.route("http://127.0.0.1:3001/groups", (route: Route) =>
     route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify([makeGroup()]) })
   );
-  await page.route("http://127.0.0.1:3001/groups/g1/questions", async (route) => {
+  await page.route("http://127.0.0.1:3001/groups/g1/questions", async (route: Route) => {
     if (route.request().method() === "GET") {
       await route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify(questions) });
     } else {
@@ -121,7 +118,11 @@ test("leader can add a question", async ({ context, page }) => {
   let questionsData = [...questions];
   await page.route("http://127.0.0.1:3001/groups/g1/questions", async (route) => {
     if (route.request().method() === "GET") {
-      await route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify(questionsData) });
+      await route.fulfill({
+        status: 200,
+        headers: apiHeaders,
+        body: JSON.stringify(questionsData),
+      });
     } else if (route.request().method() === "POST") {
       questionsData = [...questionsData, newQuestion];
       await route.fulfill({ status: 201, headers: apiHeaders, body: JSON.stringify(newQuestion) });
@@ -135,7 +136,7 @@ test("leader can add a question", async ({ context, page }) => {
   await expect(page.getByRole("heading", { name: "질문 추가하기" })).toBeVisible();
 
   await page.getByLabel("질문 내용").fill("오늘 가장 감사한 일은?");
-  await page.getByRole("button", { name: "추가" }).click();
+  await page.getByTestId("submit-button").click();
 
   await expect(page.getByRole("heading", { name: "질문 추가하기" })).not.toBeVisible();
 });
@@ -201,16 +202,14 @@ test("leader can delete a question", async ({ context, page }) => {
   await page.getByRole("button", { name: "질문 삭제" }).click();
   await expect(page.getByRole("heading", { name: "질문 삭제" })).toBeVisible();
 
-  await page.getByRole("button", { name: "삭제" }).click();
+  await page.getByTestId("confirm-button").click();
   await expect(page.getByRole("heading", { name: "질문 삭제" })).not.toBeVisible();
 });
 
 test("add button is disabled when 4 questions exist", async ({ context, page }) => {
   await context.addCookies([sessionCookie]);
 
-  const questions = [1, 2, 3, 4].map((n) =>
-    makeQuestion(`q${n}`, `질문 ${n}`, n)
-  );
+  const questions = [1, 2, 3, 4].map((n) => makeQuestion(`q${n}`, `질문 ${n}`, n));
 
   await setupLeaderRoutes(page, questions);
   await page.goto("/questions");

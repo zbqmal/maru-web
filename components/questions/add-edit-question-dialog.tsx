@@ -89,7 +89,7 @@ const AddEditQuestionDialog = ({
             <Button type="button" variant="outline" onClick={handleClose} disabled={isPending}>
               취소
             </Button>
-            <Button type="submit" disabled={!value.trim() || isPending}>
+            <Button data-testid="submit-button" type="submit" disabled={!value.trim() || isPending}>
               {isPending ? pendingLabel : submitLabel}
             </Button>
           </DialogFooter>

@@ -54,7 +54,7 @@ const DeleteQuestionDialog = ({
             <Button type="button" variant="outline" onClick={handleClose} disabled={isPending}>
               취소
             </Button>
-            <Button variant="destructive" onClick={onConfirm} disabled={isPending}>
+            <Button data-testid="confirm-button" variant="destructive" onClick={onConfirm} disabled={isPending}>
               {isPending ? "삭제 중..." : "삭제"}
             </Button>
           </DialogFooter>
