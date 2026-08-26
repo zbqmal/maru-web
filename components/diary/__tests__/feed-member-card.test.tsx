@@ -75,19 +75,25 @@ describe("FeedMemberCard", () => {
   it("shows 'no entry' message when member has not written", () => {
     render(<FeedMemberCard memberEntry={noEntryMember} totalQuestions={2} />);
     expect(screen.getByText("아직 오늘의 기록을 남기지 않았어요.")).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "아직 미작성" })).toBeInTheDocument();
+    expect(screen.getByLabelText("다연의 오늘 기록")).toBeInTheDocument();
+    expect(screen.getByText("다")).toBeInTheDocument();
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
   });
 
-  it("shows partial progress indicator when member has answered some questions", () => {
+  it("renders a member's answers in an accessible answer list", () => {
     render(<FeedMemberCard memberEntry={partialEntryMember} totalQuestions={2} />);
-    expect(screen.getByText("1/2 작성")).toBeInTheDocument();
+    const answerList = screen.getByRole("list", { name: "다연의 답변 목록" });
+    expect(answerList).toBeInTheDocument();
     expect(screen.getByText("오늘 가장 좋았던 순간은?")).toBeInTheDocument();
     expect(screen.getByText("가족이랑 저녁")).toBeInTheDocument();
+    expect(screen.queryByText("1/2 작성")).not.toBeInTheDocument();
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
   });
 
-  it("shows completion checkmark when all questions are answered", () => {
+  it("uses the completed card styling when all questions are answered", () => {
     render(<FeedMemberCard memberEntry={completedEntryMember} totalQuestions={2} />);
-    expect(screen.getByRole("img", { name: "모두 작성 완료" })).toBeInTheDocument();
+    expect(screen.getByLabelText("다연의 오늘 기록")).toHaveClass("border-success/30");
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
   });
 
   it("renders all answers with question snapshot and body", () => {
@@ -98,10 +104,23 @@ describe("FeedMemberCard", () => {
     expect(screen.getByText("새 카페 발견")).toBeInTheDocument();
   });
 
-  it("shows completion checkmark when totalQuestions is 0 and entry has 0 answers (edge: no questions)", () => {
+  it("uses a horizontal member column and indents answer bodies", () => {
+    render(<FeedMemberCard memberEntry={partialEntryMember} totalQuestions={2} />);
+    const card = screen.getByLabelText("다연의 오늘 기록");
+    const content = card.firstElementChild;
+    const memberColumn = content?.firstElementChild;
+    const answerList = screen.getByRole("list", { name: "다연의 답변 목록" });
+    const answerRow = answerList.firstElementChild;
+
+    expect(content).toHaveClass("flex", "gap-10");
+    expect(memberColumn).toHaveClass("w-30", "items-start");
+    expect(answerRow).toHaveClass("gap-2", "py-1");
+    expect(screen.getByText("가족이랑 저녁")).toHaveClass("pl-2");
+  });
+
+  it("does not use completed styling when totalQuestions is 0 and entry has 0 answers", () => {
     const noQuestionsMember: FeedMemberEntry = { ...noEntryMember };
     render(<FeedMemberCard memberEntry={noQuestionsMember} totalQuestions={0} />);
-    // no checkmark because no answers
-    expect(screen.queryByRole("img", { name: "모두 작성 완료" })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("다연의 오늘 기록")).toHaveClass("border-border");
   });
 });

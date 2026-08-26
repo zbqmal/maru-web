@@ -145,8 +145,10 @@ test("diary page renders today's context questions", async ({ context, page }) =
   await page.goto("/diary");
 
   await expect(page.getByRole("heading", { name: "오늘의 다이어리" })).toBeVisible();
-  await expect(page.getByText("오늘 가장 좋았던 순간은?")).toBeVisible();
-  // completed question shows checkmark icon
+  await expect(
+    page.getByRole("button", { name: "질문 1 오늘 가장 좋았던 순간은? 작성 완료" })
+  ).toBeVisible();
+  // completed question remains visibly marked
   await expect(page.getByLabel("작성 완료")).toBeVisible();
   await expect(page.getByText("멤버 2명과 함께 오늘의 질문에 답해보세요.")).toBeVisible();
 });
@@ -235,12 +237,16 @@ test("group daily feed renders member entries", async ({ context, page }) => {
   // Feed section heading
   await expect(page.getByRole("heading", { name: "오늘의 기록" })).toBeVisible();
 
-  // 리더 has an answer
-  await expect(page.getByText("리더")).toBeVisible();
-  await expect(page.getByText("가족이랑 저녁")).toBeVisible();
-  await expect(page.getByRole("img", { name: "모두 작성 완료" })).toBeVisible();
+  // 리더 has an answer list
+  const leaderCard = page.getByLabel("리더의 오늘 기록");
+  await expect(leaderCard.getByText("리더")).toBeVisible();
+  await expect(leaderCard.getByRole("list", { name: "리더의 답변 목록" })).toBeVisible();
+  await expect(leaderCard.getByText("가족이랑 저녁")).toBeVisible();
+  await expect(page.getByRole("img", { name: "모두 작성 완료" })).not.toBeAttached();
 
   // 멤버 has no entry
-  await expect(page.getByText("멤버")).toBeVisible();
-  await expect(page.getByText("아직 오늘의 기록을 남기지 않았어요.")).toBeVisible();
+  const memberCard = page.getByLabel("멤버의 오늘 기록");
+  await expect(memberCard.getByText("멤버")).toBeVisible();
+  await expect(memberCard.getByText("아직 오늘의 기록을 남기지 않았어요.")).toBeVisible();
+  await expect(page.getByRole("img", { name: "아직 미작성" })).not.toBeAttached();
 });

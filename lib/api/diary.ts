@@ -38,25 +38,6 @@ export interface UpdateAnswerInput {
   body: string;
 }
 
-export const getDiaryContext = (groupId: string, date: string) =>
-  apiRequest<DiaryContextResponse>(
-    `/groups/${groupId}/diary/context?date=${encodeURIComponent(date)}`
-  );
-
-export const createAnswer = (groupId: string, input: CreateAnswerInput) =>
-  apiRequest<DiaryAnswer>(`/groups/${groupId}/diary/answers`, {
-    method: "POST",
-    body: input,
-  });
-
-export const updateAnswer = (groupId: string, answerId: string, input: UpdateAnswerInput) =>
-  apiRequest<DiaryAnswer>(`/groups/${groupId}/diary/answers/${answerId}`, {
-    method: "PATCH",
-    body: input,
-  });
-
-// Group Daily Feed
-
 export interface FeedMemberUser {
   id: string;
   name: string;
@@ -81,6 +62,23 @@ export interface GroupDailyFeedResponse {
   date: string;
   members: FeedMemberEntry[];
 }
+
+export const getDiaryContext = (groupId: string, date: string) =>
+  apiRequest<DiaryContextResponse>(
+    `/groups/${groupId}/diary/context?date=${encodeURIComponent(date)}`
+  );
+
+export const createAnswer = (groupId: string, input: CreateAnswerInput) =>
+  apiRequest<DiaryAnswer>(`/groups/${groupId}/diary/answers`, {
+    method: "POST",
+    body: input,
+  });
+
+export const updateAnswer = (groupId: string, answerId: string, input: UpdateAnswerInput) =>
+  apiRequest<DiaryAnswer>(`/groups/${groupId}/diary/answers/${answerId}`, {
+    method: "PATCH",
+    body: input,
+  });
 
 export const getGroupDailyFeed = (groupId: string, date: string) =>
   apiRequest<GroupDailyFeedResponse>(

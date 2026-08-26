@@ -127,10 +127,10 @@ describe("GroupDailyFeed", () => {
     expect(screen.getByText("아직 기록이 없어요")).toBeInTheDocument();
   });
 
-  it("shows completed checkmark for member who answered all questions", () => {
+  it("renders completed member answers without a status indicator", () => {
     render(<GroupDailyFeed groupId="g1" date="2026-08-26" totalQuestions={2} />);
-    // 리더 answered both questions
-    expect(screen.getByRole("img", { name: "모두 작성 완료" })).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "리더의 답변 목록" })).toBeInTheDocument();
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
   });
 
   it("shows 'no entry' text for member with null entry", () => {
@@ -138,10 +138,10 @@ describe("GroupDailyFeed", () => {
     expect(screen.getByText("아직 오늘의 기록을 남기지 않았어요.")).toBeInTheDocument();
   });
 
-  it("shows partial progress for member with partial entry", () => {
+  it("renders partial member answers without progress text", () => {
     render(<GroupDailyFeed groupId="g1" date="2026-08-26" totalQuestions={2} />);
-    // 민수 answered 1/2
-    expect(screen.getByText("1/2 작성")).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "민수의 답변 목록" })).toBeInTheDocument();
+    expect(screen.queryByText("1/2 작성")).not.toBeInTheDocument();
   });
 
   it("renders answer bodies and question snapshots", () => {
