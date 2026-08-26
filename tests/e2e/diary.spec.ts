@@ -90,6 +90,7 @@ test("diary page renders today's context questions", async ({ context, page }) =
                 questionType: "CUSTOM",
                 groupQuestionId: "q1",
                 body: "가족이랑 저녁",
+                questionSnapshot: "오늘 가장 좋았던 순간은?",
                 createdAt: "2026-08-25T00:00:00.000Z",
                 updatedAt: "2026-08-25T00:00:00.000Z",
               },
@@ -105,6 +106,63 @@ test("diary page renders today's context questions", async ({ context, page }) =
 
   await expect(page.getByRole("heading", { name: "오늘의 다이어리" })).toBeVisible();
   await expect(page.getByText("오늘 가장 좋았던 순간은?")).toBeVisible();
-  await expect(page.getByText("작성 완료")).toBeVisible();
+  // completed question shows checkmark icon
+  await expect(page.getByLabel("작성 완료")).toBeVisible();
   await expect(page.getByText("멤버 2명과 함께 오늘의 질문에 답해보세요.")).toBeVisible();
+});
+
+test("diary question expand/collapse interaction", async ({ context, page }) => {
+  await context.addCookies([sessionCookie]);
+
+  await page.route(new RegExp(`http://${apiHostPattern}:3001/me$`), (route) =>
+    route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify(user) })
+  );
+  await page.route(new RegExp(`http://${apiHostPattern}:3001/groups$`), (route) =>
+    route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify([group]) })
+  );
+  await page.route(
+    new RegExp(`http://${apiHostPattern}:3001/groups/g1/diary/context\\?date=.*`),
+    (route) =>
+      route.fulfill({
+        status: 200,
+        headers: apiHeaders,
+        body: JSON.stringify({
+          questions: [
+            {
+              id: "q1",
+              groupId: "g1",
+              question: "오늘 가장 기뻤던 일은?",
+              displayOrder: 1,
+              isActive: true,
+              createdByUserId: "u1",
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+          ],
+          entry: null,
+        }),
+      })
+  );
+
+  await page.goto("/diary");
+
+  // question is collapsed by default — no textarea visible
+  await expect(page.getByRole("textbox")).not.toBeAttached();
+  const toggleButton = page.getByRole("button", { name: /질문 1/ });
+  await expect(toggleButton).toBeVisible();
+
+  // expand
+  await toggleButton.click();
+  const textarea = page.getByRole("textbox", { name: "질문 1 답변 입력" });
+  await expect(textarea).toBeVisible();
+  const submitButton = page.getByRole("button", { name: "답변하기" });
+  await expect(submitButton).toBeDisabled();
+
+  // type an answer
+  await textarea.fill("오늘 정말 행복했어요");
+  await expect(submitButton).toBeEnabled();
+
+  // collapse by clicking the toggle again
+  await toggleButton.click();
+  await expect(textarea).not.toBeVisible();
 });

@@ -29,37 +29,38 @@ const mockGroup: Group = {
   ],
 };
 
-const mockContext: DiaryContextResponse = {
-  questions: [
-    {
-      id: "q1",
-      groupId: "g1",
-      question: "오늘 가장 기뻤던 일은?",
-      displayOrder: 1,
-      isActive: true,
-      createdByUserId: "u1",
-      createdAt: "2024-01-01",
-      updatedAt: "2024-01-01",
-    },
-  ],
-  entry: {
-    id: "e1",
-    diaryDate: "2026-08-25",
-    createdAt: "2026-08-25T00:00:00.000Z",
-    updatedAt: "2026-08-25T00:00:00.000Z",
-    answers: [
+  const mockContext: DiaryContextResponse = {
+    questions: [
       {
-        id: "a1",
-        diaryEntryId: "e1",
-        questionType: "CUSTOM",
-        groupQuestionId: "q1",
-        body: "가족과 저녁 산책",
-        createdAt: "2026-08-25T00:00:00.000Z",
-        updatedAt: "2026-08-25T00:00:00.000Z",
+        id: "q1",
+        groupId: "g1",
+        question: "오늘 가장 기뻤던 일은?",
+        displayOrder: 1,
+        isActive: true,
+        createdByUserId: "u1",
+        createdAt: "2024-01-01",
+        updatedAt: "2024-01-01",
       },
     ],
-  },
-};
+    entry: {
+      id: "e1",
+      diaryDate: "2026-08-25",
+      createdAt: "2026-08-25T00:00:00.000Z",
+      updatedAt: "2026-08-25T00:00:00.000Z",
+      answers: [
+        {
+          id: "a1",
+          diaryEntryId: "e1",
+          questionType: "CUSTOM",
+          groupQuestionId: "q1",
+          body: "가족과 저녁 산책",
+          questionSnapshot: "오늘 가장 기뻤던 일은?",
+          createdAt: "2026-08-25T00:00:00.000Z",
+          updatedAt: "2026-08-25T00:00:00.000Z",
+        },
+      ],
+    },
+  };
 
 let mockActiveGroup: Group | null = mockGroup;
 let mockDiaryResult: {
@@ -107,7 +108,7 @@ describe("DiaryPage", () => {
     expect(screen.getByText("우리 가족")).toBeInTheDocument();
     expect(screen.getByRole("list", { name: "오늘의 질문 목록" })).toBeInTheDocument();
     expect(screen.getByText("오늘 가장 기뻤던 일은?")).toBeInTheDocument();
-    expect(screen.getByText("작성 완료")).toBeInTheDocument();
+    expect(screen.getByLabelText("작성 완료")).toBeInTheDocument();
     expect(screen.getByText("멤버 2명과 함께 오늘의 질문에 답해보세요.")).toBeInTheDocument();
   });
 

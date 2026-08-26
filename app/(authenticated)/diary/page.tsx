@@ -4,6 +4,7 @@ import EmptyState from "@/components/ui/empty-state";
 import ErrorState from "@/components/ui/error-state";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import DiaryQuestionCard from "@/components/diary/diary-question-card";
 import { useDiaryContextQuery } from "@/hooks/use-diary-context";
 import { useActiveGroupQuery } from "@/hooks/use-groups";
 
@@ -20,13 +21,17 @@ const DiaryPage = () => {
   const date = getLocalDateString();
   const { data, isLoading, isError, refetch } = useDiaryContextQuery(activeGroup?.id ?? null, date);
 
-  const answeredQuestionIds = new Set(
-    (data?.entry?.answers ?? [])
-      .filter((answer) => answer.questionType === "CUSTOM" && answer.groupQuestionId)
-      .map((answer) => answer.groupQuestionId)
-  );
-
+  const answers = data?.entry?.answers ?? [];
   const questions = data?.questions ?? [];
+
+  const getExistingAnswer = (questionId: string) =>
+    answers.find(
+      (a) => a.questionType === "CUSTOM" && a.groupQuestionId === questionId
+    );
+
+  const handleSubmit = async (_questionId: string, _body: string): Promise<void> => {
+    // Answer create/update integration is handled in PR 3.
+  };
 
   return (
     <div className="flex gap-6">
@@ -84,20 +89,13 @@ const DiaryPage = () => {
                 ) : (
                   <ul aria-label="오늘의 질문 목록" className="flex flex-col gap-2">
                     {questions.map((question, index) => (
-                      <li
+                      <DiaryQuestionCard
                         key={question.id}
-                        className="rounded-lg border border-border bg-background px-4 py-3"
-                      >
-                        <div className="mb-1 flex items-center justify-between gap-2">
-                          <span className="text-xs font-semibold text-muted-foreground">
-                            질문 {index + 1}
-                          </span>
-                          {answeredQuestionIds.has(question.id) && (
-                            <span className="text-xs font-medium text-primary">작성 완료</span>
-                          )}
-                        </div>
-                        <p className="text-sm text-foreground">{question.question}</p>
-                      </li>
+                        question={question}
+                        index={index}
+                        existingAnswer={getExistingAnswer(question.id)}
+                        onSubmit={handleSubmit}
+                      />
                     ))}
                   </ul>
                 )}
