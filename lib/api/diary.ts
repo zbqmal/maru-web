@@ -9,6 +9,7 @@ export interface DiaryAnswer {
   questionType: AnswerQuestionType;
   groupQuestionId: string | null;
   body: string;
+  questionSnapshot: string;
   createdAt: string;
   updatedAt: string;
 }
