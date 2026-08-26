@@ -100,7 +100,7 @@ describe("DiaryPage", () => {
     };
   });
 
-  it("renders group header, questions, and member sidebar", () => {
+  it("renders group header and today questions with answered status", () => {
     render(<DiaryPage />);
 
     expect(screen.getByRole("heading", { name: "오늘의 다이어리" })).toBeInTheDocument();
@@ -108,9 +108,7 @@ describe("DiaryPage", () => {
     expect(screen.getByRole("list", { name: "오늘의 질문 목록" })).toBeInTheDocument();
     expect(screen.getByText("오늘 가장 기뻤던 일은?")).toBeInTheDocument();
     expect(screen.getByText("작성 완료")).toBeInTheDocument();
-    expect(screen.getByRole("complementary", { name: "멤버 사이드바" })).toBeInTheDocument();
-    expect(screen.getByText("리더 (나)")).toBeInTheDocument();
-    expect(screen.getByText("멤버")).toBeInTheDocument();
+    expect(screen.getByText("멤버 2명과 함께 오늘의 질문에 답해보세요.")).toBeInTheDocument();
   });
 
   it("shows no-group empty state", () => {

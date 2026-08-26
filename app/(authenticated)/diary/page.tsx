@@ -1,11 +1,9 @@
 "use client";
 
-import Avatar from "@/components/ui/avatar";
 import EmptyState from "@/components/ui/empty-state";
 import ErrorState from "@/components/ui/error-state";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useCurrentUserQuery } from "@/hooks/use-current-user";
 import { useDiaryContextQuery } from "@/hooks/use-diary-context";
 import { useActiveGroupQuery } from "@/hooks/use-groups";
 
@@ -18,7 +16,6 @@ const getLocalDateString = () => {
 };
 
 const DiaryPage = () => {
-  const { data: currentUser } = useCurrentUserQuery();
   const { activeGroup } = useActiveGroupQuery();
   const date = getLocalDateString();
   const { data, isLoading, isError, refetch } = useDiaryContextQuery(activeGroup?.id ?? null, date);
@@ -73,7 +70,10 @@ const DiaryPage = () => {
                 {isLoading ? (
                   <LoadingSpinner label="오늘의 다이어리를 불러오는 중..." />
                 ) : isError ? (
-                  <ErrorState description="오늘의 질문을 불러오지 못했어요." onRetry={() => void refetch()} />
+                  <ErrorState
+                    description="오늘의 질문을 불러오지 못했어요."
+                    onRetry={() => void refetch()}
+                  />
                 ) : questions.length === 0 ? (
                   <EmptyState
                     icon="💬"
@@ -106,30 +106,6 @@ const DiaryPage = () => {
           </>
         )}
       </div>
-
-      {activeGroup && (
-        <aside aria-label="멤버 사이드바" className="hidden w-64 shrink-0 lg:block">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">오늘 함께 기록하는 멤버</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul aria-label="오늘의 멤버 목록" className="flex flex-col gap-2">
-                {activeGroup.memberships.map((membership) => (
-                  <li key={membership.id} className="flex items-center gap-2 text-sm">
-                    <Avatar fallback={membership.user.name} size="sm" />
-                    <span className="truncate text-foreground">
-                      {membership.user.name}
-                      {membership.userId === currentUser?.id && " (나)"}
-                    </span>
-                    {membership.role === "LEADER" && <span aria-label="그룹 리더">👑</span>}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        </aside>
-      )}
     </div>
   );
 };
