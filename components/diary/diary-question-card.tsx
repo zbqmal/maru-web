@@ -42,8 +42,10 @@ const DiaryQuestionCard = ({
 
   const handleSubmit = async () => {
     const trimmed = body.trim();
+
     if (!trimmed || isSubmitting) return;
     setIsSubmitting(true);
+
     try {
       await onSubmit(question.id, trimmed);
       setIsExpanded(false);
@@ -60,7 +62,7 @@ const DiaryQuestionCard = ({
         "rounded-xl border transition-colors",
         isExpanded
           ? "border-primary bg-surface shadow-sm"
-          : "border-border bg-surface hover:border-primary/50",
+          : "border-border bg-surface hover:border-primary/50"
       )}
     >
       <button
@@ -84,10 +86,7 @@ const DiaryQuestionCard = ({
       </button>
 
       {isExpanded && (
-        <div
-          id={`diary-answer-${question.id}`}
-          className="flex flex-col gap-3 px-4 pb-4"
-        >
+        <div id={`diary-answer-${question.id}`} className="flex flex-col gap-3 px-4 pb-4">
           <textarea
             ref={textareaRef}
             value={body}
@@ -95,7 +94,7 @@ const DiaryQuestionCard = ({
             rows={4}
             className={cn(
               "w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             )}
             aria-label={`질문 ${index + 1} 답변 입력`}
           />

@@ -25,9 +25,7 @@ const DiaryPage = () => {
   const questions = data?.questions ?? [];
 
   const getExistingAnswer = (questionId: string) =>
-    answers.find(
-      (a) => a.questionType === "CUSTOM" && a.groupQuestionId === questionId
-    );
+    answers.find((a) => a.questionType === "CUSTOM" && a.groupQuestionId === questionId);
 
   const handleSubmit = async (_questionId: string, _body: string): Promise<void> => {
     // Answer create/update integration is handled in PR 3.
