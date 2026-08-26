@@ -7,7 +7,7 @@
 - Configure linting and formatting.
 - Establish the initial route/layout structure.
 - Add global styles and Tailwind CSS.
-- Add the initial Jest test setup.
+- Add the initial Jest test setup
 
 ## PR 2 — Base UI and Application Shell
 
