@@ -33,6 +33,8 @@ const DiaryPage = () => {
     answers.find((a) => a.questionType === "CUSTOM" && a.groupQuestionId === questionId);
 
   const handleSubmit = async (questionId: string, body: string): Promise<void> => {
+    if (!activeGroup) return;
+
     const existingAnswer = getExistingAnswer(questionId);
 
     if (existingAnswer) {
