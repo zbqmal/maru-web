@@ -5,6 +5,7 @@ import ErrorState from "@/components/ui/error-state";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DiaryQuestionCard from "@/components/diary/diary-question-card";
+import GroupDailyFeed from "@/components/diary/group-daily-feed";
 import { useDiaryContextQuery } from "@/hooks/use-diary-context";
 import { useActiveGroupQuery } from "@/hooks/use-groups";
 import { useCreateAnswerMutation, useUpdateAnswerMutation } from "@/hooks/use-diary-answers";
@@ -117,6 +118,12 @@ const DiaryPage = () => {
                 )}
               </CardContent>
             </Card>
+
+            <GroupDailyFeed
+              groupId={activeGroup.id}
+              date={date}
+              totalQuestions={questions.length}
+            />
           </>
         )}
       </div>

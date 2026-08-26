@@ -97,6 +97,10 @@ jest.mock("@/hooks/use-diary-context", () => ({
   useDiaryContextQuery: () => mockDiaryResult,
 }));
 
+jest.mock("@/hooks/use-group-daily-feed", () => ({
+  useGroupDailyFeedQuery: () => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() }),
+}));
+
 jest.mock("@/hooks/use-diary-answers", () => ({
   useCreateAnswerMutation: () => ({ mutateAsync: mockCreateAnswerMutateAsync }),
   useUpdateAnswerMutation: () => ({ mutateAsync: mockUpdateAnswerMutateAsync }),

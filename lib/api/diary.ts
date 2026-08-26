@@ -38,6 +38,31 @@ export interface UpdateAnswerInput {
   body: string;
 }
 
+export interface FeedMemberUser {
+  id: string;
+  name: string;
+  profileImageKey: Record<string, unknown> | null;
+}
+
+export interface FeedEntry {
+  id: string;
+  diaryDate: string;
+  answers: DiaryAnswer[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FeedMemberEntry {
+  userId: string;
+  user: FeedMemberUser;
+  entry: FeedEntry | null;
+}
+
+export interface GroupDailyFeedResponse {
+  date: string;
+  members: FeedMemberEntry[];
+}
+
 export const getDiaryContext = (groupId: string, date: string) =>
   apiRequest<DiaryContextResponse>(
     `/groups/${groupId}/diary/context?date=${encodeURIComponent(date)}`
@@ -54,3 +79,8 @@ export const updateAnswer = (groupId: string, answerId: string, input: UpdateAns
     method: "PATCH",
     body: input,
   });
+
+export const getGroupDailyFeed = (groupId: string, date: string) =>
+  apiRequest<GroupDailyFeedResponse>(
+    `/groups/${groupId}/diary/feed?date=${encodeURIComponent(date)}`
+  );
