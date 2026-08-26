@@ -1,8 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import DiaryPage from "../page";
 import type { Group } from "@/lib/api/groups";
-import type { DiaryContextResponse } from "@/lib/api/diary";
+import type { DiaryContextResponse, DiaryAnswer } from "@/lib/api/diary";
 
 const mockGroup: Group = {
   id: "g1",
@@ -29,38 +29,43 @@ const mockGroup: Group = {
   ],
 };
 
-  const mockContext: DiaryContextResponse = {
-    questions: [
-      {
-        id: "q1",
-        groupId: "g1",
-        question: "오늘 가장 기뻤던 일은?",
-        displayOrder: 1,
-        isActive: true,
-        createdByUserId: "u1",
-        createdAt: "2024-01-01",
-        updatedAt: "2024-01-01",
-      },
-    ],
-    entry: {
-      id: "e1",
-      diaryDate: "2026-08-25",
-      createdAt: "2026-08-25T00:00:00.000Z",
-      updatedAt: "2026-08-25T00:00:00.000Z",
-      answers: [
-        {
-          id: "a1",
-          diaryEntryId: "e1",
-          questionType: "CUSTOM",
-          groupQuestionId: "q1",
-          body: "가족과 저녁 산책",
-          questionSnapshot: "오늘 가장 기뻤던 일은?",
-          createdAt: "2026-08-25T00:00:00.000Z",
-          updatedAt: "2026-08-25T00:00:00.000Z",
-        },
-      ],
+const mockAnswer: DiaryAnswer = {
+  id: "a1",
+  diaryEntryId: "e1",
+  questionType: "CUSTOM",
+  groupQuestionId: "q1",
+  body: "가족과 저녁 산책",
+  questionSnapshot: "오늘 가장 기뻤던 일은?",
+  createdAt: "2026-08-25T00:00:00.000Z",
+  updatedAt: "2026-08-25T00:00:00.000Z",
+};
+
+const mockContext: DiaryContextResponse = {
+  questions: [
+    {
+      id: "q1",
+      groupId: "g1",
+      question: "오늘 가장 기뻤던 일은?",
+      displayOrder: 1,
+      isActive: true,
+      createdByUserId: "u1",
+      createdAt: "2024-01-01",
+      updatedAt: "2024-01-01",
     },
-  };
+  ],
+  entry: {
+    id: "e1",
+    diaryDate: "2026-08-25",
+    createdAt: "2026-08-25T00:00:00.000Z",
+    updatedAt: "2026-08-25T00:00:00.000Z",
+    answers: [mockAnswer],
+  },
+};
+
+const mockContextNoEntry: DiaryContextResponse = {
+  ...mockContext,
+  entry: null,
+};
 
 let mockActiveGroup: Group | null = mockGroup;
 let mockDiaryResult: {
@@ -74,6 +79,9 @@ let mockDiaryResult: {
   isError: false,
   refetch: jest.fn(),
 };
+
+const mockCreateAnswerMutateAsync = jest.fn();
+const mockUpdateAnswerMutateAsync = jest.fn();
 
 jest.mock("@/hooks/use-current-user", () => ({
   useCurrentUserQuery: () => ({ data: { id: "u1", email: "leader@example.com", name: "리더" } }),
@@ -89,6 +97,11 @@ jest.mock("@/hooks/use-diary-context", () => ({
   useDiaryContextQuery: () => mockDiaryResult,
 }));
 
+jest.mock("@/hooks/use-diary-answers", () => ({
+  useCreateAnswerMutation: () => ({ mutateAsync: mockCreateAnswerMutateAsync }),
+  useUpdateAnswerMutation: () => ({ mutateAsync: mockUpdateAnswerMutateAsync }),
+}));
+
 describe("DiaryPage", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -99,6 +112,8 @@ describe("DiaryPage", () => {
       isError: false,
       refetch: jest.fn(),
     };
+    mockCreateAnswerMutateAsync.mockResolvedValue(mockAnswer);
+    mockUpdateAnswerMutateAsync.mockResolvedValue({ ...mockAnswer, body: "수정된 답변" });
   });
 
   it("renders group header and today questions with answered status", () => {
@@ -141,5 +156,83 @@ describe("DiaryPage", () => {
     };
     render(<DiaryPage />);
     expect(screen.getByText("아직 활성화된 질문이 없어요")).toBeInTheDocument();
+  });
+
+  it("calls createAnswer when submitting a new answer (no existing entry)", async () => {
+    mockDiaryResult = {
+      data: mockContextNoEntry,
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    };
+    render(<DiaryPage />);
+
+    await userEvent.click(screen.getByRole("button", { name: /질문 1/i }));
+    await userEvent.type(screen.getByRole("textbox"), "좋은 하루");
+    await userEvent.click(screen.getByRole("button", { name: "답변하기" }));
+
+    await waitFor(() =>
+      expect(mockCreateAnswerMutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          questionType: "CUSTOM",
+          groupQuestionId: "q1",
+          body: "좋은 하루",
+        })
+      )
+    );
+    expect(mockUpdateAnswerMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("calls updateAnswer when editing an existing answer", async () => {
+    render(<DiaryPage />);
+
+    await userEvent.click(screen.getByRole("button", { name: /질문 1/i }));
+    const textarea = screen.getByRole("textbox");
+    await userEvent.clear(textarea);
+    await userEvent.type(textarea, "수정된 답변");
+    await userEvent.click(screen.getByRole("button", { name: "수정하기" }));
+
+    await waitFor(() =>
+      expect(mockUpdateAnswerMutateAsync).toHaveBeenCalledWith({
+        answerId: "a1",
+        body: "수정된 답변",
+      })
+    );
+    expect(mockCreateAnswerMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("collapses the card after a successful submit", async () => {
+    mockDiaryResult = {
+      data: mockContextNoEntry,
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    };
+    render(<DiaryPage />);
+
+    await userEvent.click(screen.getByRole("button", { name: /질문 1/i }));
+    await userEvent.type(screen.getByRole("textbox"), "답변 내용");
+    await userEvent.click(screen.getByRole("button", { name: "답변하기" }));
+
+    await waitFor(() => expect(screen.queryByRole("textbox")).not.toBeInTheDocument());
+  });
+
+  it("keeps the card expanded when submit throws an error", async () => {
+    mockDiaryResult = {
+      data: mockContextNoEntry,
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    };
+    mockCreateAnswerMutateAsync.mockRejectedValueOnce(new Error("서버 오류"));
+
+    render(<DiaryPage />);
+
+    await userEvent.click(screen.getByRole("button", { name: /질문 1/i }));
+    await userEvent.type(screen.getByRole("textbox"), "답변 내용");
+    await userEvent.click(screen.getByRole("button", { name: "답변하기" }));
+
+    await waitFor(() => expect(mockCreateAnswerMutateAsync).toHaveBeenCalled());
+    expect(screen.getByRole("textbox")).toBeInTheDocument();
   });
 });
