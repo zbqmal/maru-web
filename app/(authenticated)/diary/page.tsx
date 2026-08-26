@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DiaryQuestionCard from "@/components/diary/diary-question-card";
 import { useDiaryContextQuery } from "@/hooks/use-diary-context";
 import { useActiveGroupQuery } from "@/hooks/use-groups";
+import { useCreateAnswerMutation, useUpdateAnswerMutation } from "@/hooks/use-diary-answers";
 
 const getLocalDateString = () => {
   const now = new Date();
@@ -21,14 +22,29 @@ const DiaryPage = () => {
   const date = getLocalDateString();
   const { data, isLoading, isError, refetch } = useDiaryContextQuery(activeGroup?.id ?? null, date);
 
+  const groupId = activeGroup?.id ?? "";
+  const createAnswerMutation = useCreateAnswerMutation(groupId, date);
+  const updateAnswerMutation = useUpdateAnswerMutation(groupId, date);
+
   const answers = data?.entry?.answers ?? [];
   const questions = data?.questions ?? [];
 
   const getExistingAnswer = (questionId: string) =>
     answers.find((a) => a.questionType === "CUSTOM" && a.groupQuestionId === questionId);
 
-  const handleSubmit = async (_questionId: string, _body: string): Promise<void> => {
-    // Answer create/update integration is handled in PR 3.
+  const handleSubmit = async (questionId: string, body: string): Promise<void> => {
+    const existingAnswer = getExistingAnswer(questionId);
+
+    if (existingAnswer) {
+      await updateAnswerMutation.mutateAsync({ answerId: existingAnswer.id, body });
+    } else {
+      await createAnswerMutation.mutateAsync({
+        date,
+        questionType: "CUSTOM",
+        groupQuestionId: questionId,
+        body,
+      });
+    }
   };
 
   return (

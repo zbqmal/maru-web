@@ -27,7 +27,30 @@ export interface DiaryContextResponse {
   entry: DiaryEntryContext | null;
 }
 
+export interface CreateAnswerInput {
+  date: string;
+  questionType: AnswerQuestionType;
+  groupQuestionId?: string;
+  body: string;
+}
+
+export interface UpdateAnswerInput {
+  body: string;
+}
+
 export const getDiaryContext = (groupId: string, date: string) =>
   apiRequest<DiaryContextResponse>(
     `/groups/${groupId}/diary/context?date=${encodeURIComponent(date)}`
   );
+
+export const createAnswer = (groupId: string, input: CreateAnswerInput) =>
+  apiRequest<DiaryAnswer>(`/groups/${groupId}/diary/answers`, {
+    method: "POST",
+    body: input,
+  });
+
+export const updateAnswer = (groupId: string, answerId: string, input: UpdateAnswerInput) =>
+  apiRequest<DiaryAnswer>(`/groups/${groupId}/diary/answers/${answerId}`, {
+    method: "PATCH",
+    body: input,
+  });
