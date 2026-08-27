@@ -226,7 +226,7 @@ describe("DiaryQuestionCard", () => {
 
     expect(screen.getByRole("button", { name: /오늘의 질문/i })).toBeInTheDocument();
     expect(screen.queryByText(/AI question/i)).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /\?/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "?" })).not.toBeInTheDocument();
   });
 
   it("uses daily question textarea label when expanded", async () => {

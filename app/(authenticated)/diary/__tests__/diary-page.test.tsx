@@ -134,7 +134,7 @@ describe("DiaryPage", () => {
     expect(screen.getByRole("list", { name: "오늘의 질문 목록" })).toBeInTheDocument();
     expect(screen.getByText("오늘 가장 기뻤던 일은?")).toBeInTheDocument();
     expect(screen.getByText("오늘 스스로를 칭찬하고 싶은 순간은?")).toBeInTheDocument();
-    expect(screen.getByText("오늘의 질문")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /오늘의 질문 오늘 스스로를 칭찬하고 싶은 순간은\?/ })).toBeInTheDocument();
     expect(screen.getByLabelText("작성 완료")).toBeInTheDocument();
     expect(screen.getByText("멤버 2명과 함께 오늘의 질문에 답해보세요.")).toBeInTheDocument();
   });
