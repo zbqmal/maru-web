@@ -281,3 +281,83 @@ test("group daily feed renders member entries", async ({ context, page }) => {
   await expect(memberCard.getByText("아직 오늘의 기록을 남기지 않았어요.")).toBeVisible();
   await expect(page.getByRole("img", { name: "아직 미작성" })).not.toBeAttached();
 });
+
+test("saving an answer refreshes the group daily feed", async ({ context, page }) => {
+  await context.addCookies([sessionCookie]);
+
+  let feedRequestCount = 0;
+  await setupCommonRoutes(page);
+  await page.route(
+    new RegExp(`http://${apiHostPattern}:3001/groups/g1/diary/feed\\?date=.*`),
+    (route) => {
+      feedRequestCount += 1;
+      const response = feedRequestCount === 1 ? feedResponse : {
+        ...feedResponse,
+        members: feedResponse.members.map((member) =>
+          member.userId === "u1"
+            ? {
+                ...member,
+                entry: {
+                  ...member.entry!,
+                  answers: [
+                    ...member.entry!.answers,
+                    {
+                      ...member.entry!.answers[0],
+                      id: "a2",
+                      body: "저장 후 피드에 표시",
+                    },
+                  ],
+                },
+              }
+            : member
+        ),
+      };
+      return route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify(response) });
+    }
+  );
+  await page.route(
+    new RegExp(`http://${apiHostPattern}:3001/groups/g1/diary/context\\?date=.*`),
+    (route) =>
+      route.fulfill({
+        status: 200,
+        headers: apiHeaders,
+        body: JSON.stringify({
+          questions: [
+            {
+              id: "q1",
+              groupId: "g1",
+              question: "오늘 가장 좋았던 순간은?",
+              displayOrder: 1,
+              isActive: true,
+              createdByUserId: "u1",
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+          ],
+          entry: null,
+        }),
+      })
+  );
+  await page.route(
+    new RegExp(`http://${apiHostPattern}:3001/groups/g1/diary/answers$`),
+    (route) =>
+      route.fulfill({
+        status: 201,
+        headers: apiHeaders,
+        body: JSON.stringify({
+          ...feedResponse.members[0].entry!.answers[0],
+          id: "a2",
+          body: "저장 후 피드에 표시",
+        }),
+      })
+  );
+
+  await page.goto("/diary");
+  await page.getByRole("button", { name: /질문 1/ }).click();
+  await page.getByRole("textbox", { name: "질문 1 답변 입력" }).fill("저장 후 피드에 표시");
+  await page.getByRole("button", { name: "답변하기" }).click();
+
+  const leaderCard = page.getByLabel("리더의 오늘 기록");
+  await expect(leaderCard.getByText("저장 후 피드에 표시")).toBeVisible();
+  expect(feedRequestCount).toBe(2);
+});

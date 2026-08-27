@@ -88,6 +88,7 @@ let mockDiaryResult: {
 
 const mockCreateAnswerMutateAsync = jest.fn();
 const mockUpdateAnswerMutateAsync = jest.fn();
+const mockGroupDailyFeedQuery = jest.fn();
 
 jest.mock("@/hooks/use-current-user", () => ({
   useCurrentUserQuery: () => ({ data: { id: "u1", email: "leader@example.com", name: "리더" } }),
@@ -104,7 +105,10 @@ jest.mock("@/hooks/use-diary-context", () => ({
 }));
 
 jest.mock("@/hooks/use-group-daily-feed", () => ({
-  useGroupDailyFeedQuery: () => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() }),
+  useGroupDailyFeedQuery: (...args: unknown[]) => {
+    mockGroupDailyFeedQuery(...args);
+    return { data: undefined, isLoading: false, isError: false, refetch: jest.fn() };
+  },
 }));
 
 jest.mock("@/hooks/use-diary-answers", () => ({
@@ -124,6 +128,12 @@ describe("DiaryPage", () => {
     };
     mockCreateAnswerMutateAsync.mockResolvedValue(mockAnswer);
     mockUpdateAnswerMutateAsync.mockResolvedValue({ ...mockAnswer, body: "수정된 답변" });
+  });
+
+  it("passes the active group and diary date to the daily feed", () => {
+    render(<DiaryPage />);
+
+    expect(mockGroupDailyFeedQuery).toHaveBeenCalledWith("g1", expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/));
   });
 
   it("renders group header and today questions with answered status", () => {

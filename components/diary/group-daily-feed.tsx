@@ -37,16 +37,10 @@ const GroupDailyFeed = ({ groupId, date, totalQuestions }: GroupDailyFeedProps) 
             className="py-10"
           />
         ) : (
-          <ul
-            aria-label="오늘의 기록 목록"
-            className="flex flex-col gap-3"
-          >
+          <ul aria-label="오늘의 기록 목록" className="flex flex-col gap-3">
             {data.members.map((memberEntry) => (
               <li key={memberEntry.userId}>
-                <FeedMemberCard
-                  memberEntry={memberEntry}
-                  totalQuestions={totalQuestions}
-                />
+                <FeedMemberCard memberEntry={memberEntry} totalQuestions={totalQuestions} />
               </li>
             ))}
           </ul>
