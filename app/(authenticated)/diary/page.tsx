@@ -4,11 +4,14 @@ import EmptyState from "@/components/ui/empty-state";
 import ErrorState from "@/components/ui/error-state";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import DiaryQuestionCard from "@/components/diary/diary-question-card";
+import DiaryQuestionCard, {
+  type DiaryQuestionCardQuestion,
+} from "@/components/diary/diary-question-card";
 import GroupDailyFeed from "@/components/diary/group-daily-feed";
 import { useDiaryContextQuery } from "@/hooks/use-diary-context";
 import { useActiveGroupQuery } from "@/hooks/use-groups";
 import { useCreateAnswerMutation, useUpdateAnswerMutation } from "@/hooks/use-diary-answers";
+import type { DiaryAnswer } from "@/lib/api/diary";
 
 const getLocalDateString = () => {
   const now = new Date();
@@ -28,23 +31,36 @@ const DiaryPage = () => {
   const updateAnswerMutation = useUpdateAnswerMutation(groupId, date);
 
   const answers = data?.entry?.answers ?? [];
-  const questions = data?.questions ?? [];
+  const customQuestions = data?.questions ?? [];
+  const dailyQuestion = data?.dailyQuestion;
+  const questions: DiaryQuestionCardQuestion[] = [
+    ...customQuestions.map((question) => ({
+      id: question.id,
+      question: question.question,
+      questionType: "CUSTOM" as const,
+    })),
+    ...(dailyQuestion
+      ? [{ id: dailyQuestion.id, question: dailyQuestion.question, questionType: "DAILY" as const }]
+      : []),
+  ];
 
-  const getExistingAnswer = (questionId: string) =>
-    answers.find((a) => a.questionType === "CUSTOM" && a.groupQuestionId === questionId);
+  const getExistingAnswer = (question: DiaryQuestionCardQuestion): DiaryAnswer | undefined =>
+    question.questionType === "DAILY"
+      ? answers.find((a) => a.questionType === "DAILY")
+      : answers.find((a) => a.questionType === "CUSTOM" && a.groupQuestionId === question.id);
 
-  const handleSubmit = async (questionId: string, body: string): Promise<void> => {
+  const handleSubmit = async (question: DiaryQuestionCardQuestion, body: string): Promise<void> => {
     if (!activeGroup) return;
 
-    const existingAnswer = getExistingAnswer(questionId);
+    const existingAnswer = getExistingAnswer(question);
 
     if (existingAnswer) {
       await updateAnswerMutation.mutateAsync({ answerId: existingAnswer.id, body });
     } else {
       await createAnswerMutation.mutateAsync({
         date,
-        questionType: "CUSTOM",
-        groupQuestionId: questionId,
+        questionType: question.questionType,
+        ...(question.questionType === "CUSTOM" ? { groupQuestionId: question.id } : {}),
         body,
       });
     }
@@ -110,7 +126,7 @@ const DiaryPage = () => {
                         key={question.id}
                         question={question}
                         index={index}
-                        existingAnswer={getExistingAnswer(question.id)}
+                        existingAnswer={getExistingAnswer(question)}
                         onSubmit={handleSubmit}
                       />
                     ))}

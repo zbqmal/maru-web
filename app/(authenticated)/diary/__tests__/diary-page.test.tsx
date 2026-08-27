@@ -53,6 +53,12 @@ const mockContext: DiaryContextResponse = {
       updatedAt: "2024-01-01",
     },
   ],
+  dailyQuestion: {
+    id: "dq1",
+    question: "오늘 스스로를 칭찬하고 싶은 순간은?",
+    questionDate: "2026-08-25",
+    createdAt: "2026-08-25T00:00:00.000Z",
+  },
   entry: {
     id: "e1",
     diaryDate: "2026-08-25",
@@ -127,6 +133,8 @@ describe("DiaryPage", () => {
     expect(screen.getByText("우리 가족")).toBeInTheDocument();
     expect(screen.getByRole("list", { name: "오늘의 질문 목록" })).toBeInTheDocument();
     expect(screen.getByText("오늘 가장 기뻤던 일은?")).toBeInTheDocument();
+    expect(screen.getByText("오늘 스스로를 칭찬하고 싶은 순간은?")).toBeInTheDocument();
+    expect(screen.getByText("오늘의 질문")).toBeInTheDocument();
     expect(screen.getByLabelText("작성 완료")).toBeInTheDocument();
     expect(screen.getByText("멤버 2명과 함께 오늘의 질문에 답해보세요.")).toBeInTheDocument();
   });
@@ -185,6 +193,74 @@ describe("DiaryPage", () => {
       )
     );
     expect(mockUpdateAnswerMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("creates a DAILY answer for today's global question", async () => {
+    mockDiaryResult = {
+      data: mockContextNoEntry,
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    };
+
+    render(<DiaryPage />);
+
+    await userEvent.click(screen.getByRole("button", { name: /오늘의 질문/i }));
+    await userEvent.type(screen.getByRole("textbox", { name: "오늘의 질문 답변 입력" }), "오늘은 포기하지 않았다");
+    await userEvent.click(screen.getByRole("button", { name: "답변하기" }));
+
+    await waitFor(() =>
+      expect(mockCreateAnswerMutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          questionType: "DAILY",
+          body: "오늘은 포기하지 않았다",
+        })
+      )
+    );
+    expect(mockCreateAnswerMutateAsync).toHaveBeenCalledWith(
+      expect.not.objectContaining({ groupQuestionId: "dq1" })
+    );
+  });
+
+  it("updates an existing DAILY answer", async () => {
+    const dailyAnswer: DiaryAnswer = {
+      id: "a2",
+      diaryEntryId: "e1",
+      questionType: "DAILY",
+      groupQuestionId: null,
+      body: "기존 답변",
+      questionSnapshot: "오늘 스스로를 칭찬하고 싶은 순간은?",
+      createdAt: "2026-08-25T00:00:00.000Z",
+      updatedAt: "2026-08-25T00:00:00.000Z",
+    };
+
+    mockDiaryResult = {
+      data: {
+        ...mockContext,
+        entry: {
+          ...mockContext.entry!,
+          answers: [mockAnswer, dailyAnswer],
+        },
+      },
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    };
+
+    render(<DiaryPage />);
+
+    await userEvent.click(screen.getByRole("button", { name: /오늘의 질문/i }));
+    const textarea = screen.getByRole("textbox", { name: "오늘의 질문 답변 입력" });
+    await userEvent.clear(textarea);
+    await userEvent.type(textarea, "수정된 오늘의 질문 답변");
+    await userEvent.click(screen.getByRole("button", { name: "수정하기" }));
+
+    await waitFor(() =>
+      expect(mockUpdateAnswerMutateAsync).toHaveBeenCalledWith({
+        answerId: "a2",
+        body: "수정된 오늘의 질문 답변",
+      })
+    );
   });
 
   it("calls updateAnswer when editing an existing answer", async () => {

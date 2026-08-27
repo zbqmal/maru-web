@@ -1,18 +1,18 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import DiaryQuestionCard from "../diary-question-card";
-import type { GroupQuestion } from "@/lib/api/questions";
 import type { DiaryAnswer } from "@/lib/api/diary";
 
-const question: GroupQuestion = {
+const question = {
   id: "q1",
-  groupId: "g1",
   question: "오늘 가장 기뻤던 일은?",
-  displayOrder: 1,
-  isActive: true,
-  createdByUserId: "u1",
-  createdAt: "2024-01-01",
-  updatedAt: "2024-01-01",
+  questionType: "CUSTOM" as const,
+};
+
+const dailyQuestion = {
+  id: "dq1",
+  question: "오늘 스스로를 칭찬하고 싶은 순간은?",
+  questionType: "DAILY" as const,
 };
 
 const answer: DiaryAnswer = {
@@ -123,7 +123,10 @@ describe("DiaryQuestionCard", () => {
     await userEvent.click(screen.getByRole("button", { name: "답변하기" }));
 
     await waitFor(() => {
-      expect(onSubmit).toHaveBeenCalledWith("q1", "좋은 하루");
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ id: "q1", questionType: "CUSTOM" }),
+        "좋은 하루"
+      );
     });
 
     await waitFor(() => {
@@ -209,5 +212,34 @@ describe("DiaryQuestionCard", () => {
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
     expect(screen.getByRole("textbox")).toBeInTheDocument();
+  });
+
+  it("renders daily question label and special styling without extra chip/help button", () => {
+    render(
+      <DiaryQuestionCard
+        question={dailyQuestion}
+        index={4}
+        existingAnswer={undefined}
+        onSubmit={jest.fn()}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: /오늘의 질문/i })).toBeInTheDocument();
+    expect(screen.queryByText(/AI question/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /\?/ })).not.toBeInTheDocument();
+  });
+
+  it("uses daily question textarea label when expanded", async () => {
+    render(
+      <DiaryQuestionCard
+        question={dailyQuestion}
+        index={4}
+        existingAnswer={undefined}
+        onSubmit={jest.fn()}
+      />
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: /오늘의 질문/i }));
+    expect(screen.getByRole("textbox", { name: "오늘의 질문 답변 입력" })).toBeInTheDocument();
   });
 });

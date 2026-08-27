@@ -120,6 +120,12 @@ test("diary page renders today's context questions", async ({ context, page }) =
               updatedAt: "2026-01-01T00:00:00.000Z",
             },
           ],
+          dailyQuestion: {
+            id: "dq1",
+            question: "오늘 스스로를 칭찬하고 싶은 순간은?",
+            questionDate: "2026-08-25",
+            createdAt: "2026-08-25T00:00:00.000Z",
+          },
           entry: {
             id: "e1",
             diaryDate: "2026-08-25",
@@ -148,6 +154,17 @@ test("diary page renders today's context questions", async ({ context, page }) =
   await expect(
     page.getByRole("button", { name: "질문 1 오늘 가장 좋았던 순간은? 작성 완료" })
   ).toBeVisible();
+  await expect(
+    page.getByRole("button", {
+      name: "오늘의 질문 오늘 스스로를 칭찬하고 싶은 순간은?",
+    })
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", {
+      name: "오늘의 질문 오늘 스스로를 칭찬하고 싶은 순간은? 작성 완료",
+    })
+  ).not.toBeVisible();
+  await expect(page.getByText("AI question")).not.toBeVisible();
   // completed question remains visibly marked
   await expect(page.getByLabel("작성 완료")).toBeVisible();
   await expect(page.getByText("멤버 2명과 함께 오늘의 질문에 답해보세요.")).toBeVisible();
@@ -176,6 +193,12 @@ test("diary question expand/collapse interaction", async ({ context, page }) => 
               updatedAt: "2026-01-01T00:00:00.000Z",
             },
           ],
+          dailyQuestion: {
+            id: "dq1",
+            question: "오늘 스스로를 칭찬하고 싶은 순간은?",
+            questionDate: "2026-08-25",
+            createdAt: "2026-08-25T00:00:00.000Z",
+          },
           entry: null,
         }),
       })
@@ -202,6 +225,14 @@ test("diary question expand/collapse interaction", async ({ context, page }) => 
   // collapse by clicking the toggle again
   await toggleButton.click();
   await expect(textarea).not.toBeVisible();
+
+  // daily question shares the same answer interaction
+  const dailyToggle = page.getByRole("button", { name: /오늘의 질문/ });
+  await dailyToggle.click();
+  const dailyTextarea = page.getByRole("textbox", { name: "오늘의 질문 답변 입력" });
+  await expect(dailyTextarea).toBeVisible();
+  await dailyTextarea.fill("스스로를 믿고 해낸 점");
+  await expect(page.getByRole("button", { name: "답변하기" })).toBeEnabled();
 });
 
 test("group daily feed renders member entries", async ({ context, page }) => {

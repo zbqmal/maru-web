@@ -22,8 +22,16 @@ export interface DiaryEntryContext {
   updatedAt: string;
 }
 
+export interface DailyQuestion {
+  id: string;
+  question: string;
+  questionDate: string;
+  createdAt: string;
+}
+
 export interface DiaryContextResponse {
   questions: GroupQuestion[];
+  dailyQuestion?: DailyQuestion | null;
   entry: DiaryEntryContext | null;
 }
 
