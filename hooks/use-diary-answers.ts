@@ -9,15 +9,18 @@ import {
   type DiaryContextResponse,
 } from "@/lib/api/diary";
 import { diaryContextQueryKey } from "@/hooks/use-diary-context";
+import { groupDailyFeedQueryKey } from "./use-group-daily-feed";
 
 export const useCreateAnswerMutation = (groupId: string, date: string) => {
   const queryClient = useQueryClient();
-  const queryKey = diaryContextQueryKey(groupId, date);
+  const diaryContextKey = diaryContextQueryKey(groupId, date);
+  const dailyFeedKey = groupDailyFeedQueryKey(groupId, date);
 
   return useMutation({
     mutationFn: (input: CreateAnswerInput) => createAnswer(groupId, input),
-    onSuccess: (newAnswer) => {
-      queryClient.setQueryData<DiaryContextResponse>(queryKey, (prev) => {
+    onSuccess: async (newAnswer) => {
+      await queryClient.invalidateQueries({ queryKey: dailyFeedKey });
+      queryClient.setQueryData<DiaryContextResponse>(diaryContextKey, (prev) => {
         if (!prev) return prev;
 
         const prevEntry = prev.entry;
@@ -56,7 +59,8 @@ interface UpdateAnswerMutationVariables {
 
 export const useUpdateAnswerMutation = (groupId: string, date: string) => {
   const queryClient = useQueryClient();
-  const queryKey = diaryContextQueryKey(groupId, date);
+  const diaryContextKey = diaryContextQueryKey(groupId, date);
+  const dailyFeedKey = groupDailyFeedQueryKey(groupId, date);
 
   return useMutation({
     mutationFn: ({ answerId, body }: UpdateAnswerMutationVariables) =>
@@ -64,11 +68,11 @@ export const useUpdateAnswerMutation = (groupId: string, date: string) => {
 
     onMutate: async ({ answerId, body }) => {
       // Cancel outbound refetches so they don't overwrite the optimistic update.
-      await queryClient.cancelQueries({ queryKey });
+      await queryClient.cancelQueries({ queryKey: diaryContextKey });
 
-      const previousData = queryClient.getQueryData<DiaryContextResponse>(queryKey);
+      const previousData = queryClient.getQueryData<DiaryContextResponse>(diaryContextKey);
 
-      queryClient.setQueryData<DiaryContextResponse>(queryKey, (prev) => {
+      queryClient.setQueryData<DiaryContextResponse>(diaryContextKey, (prev) => {
         if (!prev?.entry) return prev;
 
         return {
@@ -87,12 +91,13 @@ export const useUpdateAnswerMutation = (groupId: string, date: string) => {
 
     onError: (_error, _variables, context) => {
       if (context?.previousData !== undefined) {
-        queryClient.setQueryData(queryKey, context.previousData);
+        queryClient.setQueryData(diaryContextKey, context.previousData);
       }
     },
 
-    onSuccess: (updatedAnswer) => {
-      queryClient.setQueryData<DiaryContextResponse>(queryKey, (prev) => {
+    onSuccess: async (updatedAnswer) => {
+      await queryClient.invalidateQueries({ queryKey: dailyFeedKey });
+      queryClient.setQueryData<DiaryContextResponse>(diaryContextKey, (prev) => {
         if (!prev?.entry) return prev;
 
         return {

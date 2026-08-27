@@ -4,14 +4,19 @@ import { useState, useRef, useEffect } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { GroupQuestion } from "@/lib/api/questions";
-import type { DiaryAnswer } from "@/lib/api/diary";
+import type { AnswerQuestionType, DiaryAnswer } from "@/lib/api/diary";
+
+export interface DiaryQuestionCardQuestion {
+  id: string;
+  question: string;
+  questionType: AnswerQuestionType;
+}
 
 export interface DiaryQuestionCardProps {
-  question: GroupQuestion;
+  question: DiaryQuestionCardQuestion;
   index: number;
   existingAnswer: DiaryAnswer | undefined;
-  onSubmit: (questionId: string, body: string) => Promise<void>;
+  onSubmit: (question: DiaryQuestionCardQuestion, body: string) => Promise<void>;
 }
 
 const DiaryQuestionCard = ({
@@ -20,11 +25,13 @@ const DiaryQuestionCard = ({
   existingAnswer,
   onSubmit,
 }: DiaryQuestionCardProps) => {
+  const isDailyQuestion = question.questionType === "DAILY";
   const isCompleted = !!existingAnswer;
   const [isExpanded, setIsExpanded] = useState(false);
   const [body, setBody] = useState(existingAnswer?.body ?? "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const questionLabel = isDailyQuestion ? "오늘의 질문" : `질문 ${index + 1}`;
 
   useEffect(() => {
     if (isExpanded && textareaRef.current) {
@@ -47,7 +54,7 @@ const DiaryQuestionCard = ({
     setIsSubmitting(true);
 
     try {
-      await onSubmit(question.id, trimmed);
+      await onSubmit(question, trimmed);
       setIsExpanded(false);
     } catch {
       // keep the card expanded so the user can retry
@@ -61,8 +68,12 @@ const DiaryQuestionCard = ({
       className={cn(
         "rounded-xl border transition-colors",
         isExpanded
-          ? "border-primary bg-surface shadow-sm"
-          : "border-border bg-surface hover:border-primary/50"
+          ? isDailyQuestion
+            ? "border-primary bg-primary/5 shadow-sm"
+            : "border-primary bg-surface shadow-sm"
+          : isDailyQuestion
+            ? "border-primary/40 bg-primary/5 hover:border-primary/80"
+            : "border-border bg-surface hover:border-primary/50"
       )}
     >
       <button
@@ -72,8 +83,13 @@ const DiaryQuestionCard = ({
         aria-expanded={isExpanded}
         aria-controls={`diary-answer-${question.id}`}
       >
-        <span className="shrink-0 text-xs font-semibold text-muted-foreground">
-          질문 {index + 1}
+        <span
+          className={cn(
+            "shrink-0 text-xs font-semibold",
+            isDailyQuestion ? "text-primary" : "text-muted-foreground"
+          )}
+        >
+          {questionLabel}
         </span>
         <p className="flex-1 text-sm font-medium text-foreground">{question.question}</p>
         {isCompleted && !isExpanded && (
@@ -96,7 +112,7 @@ const DiaryQuestionCard = ({
               "w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             )}
-            aria-label={`질문 ${index + 1} 답변 입력`}
+            aria-label={`${questionLabel} 답변 입력`}
           />
           <div className="flex justify-end">
             <Button

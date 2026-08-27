@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createAnswer, updateAnswer } from "@/lib/api/diary";
 import { useCreateAnswerMutation, useUpdateAnswerMutation } from "@/hooks/use-diary-answers";
 import { diaryContextQueryKey } from "@/hooks/use-diary-context";
+import { groupDailyFeedQueryKey } from "@/hooks/use-group-daily-feed";
 import type { DiaryAnswer, DiaryContextResponse } from "@/lib/api/diary";
 
 jest.mock("@/lib/api/diary", () => ({
@@ -62,6 +63,7 @@ describe("useCreateAnswerMutation", () => {
 
   it("adds the new answer to an existing entry in the cache on success", async () => {
     const qc = makeQueryClient();
+    const invalidateQueries = jest.spyOn(qc, "invalidateQueries");
     const queryKey = diaryContextQueryKey(GROUP_ID, DATE);
     qc.setQueryData(queryKey, makeContextWithEntry([]));
 
@@ -86,6 +88,9 @@ describe("useCreateAnswerMutation", () => {
     const updated = qc.getQueryData<DiaryContextResponse>(queryKey);
     expect(updated?.entry?.answers).toHaveLength(1);
     expect(updated?.entry?.answers[0]).toMatchObject({ id: "a2", body: "새 답변" });
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: groupDailyFeedQueryKey(GROUP_ID, DATE),
+    });
   });
 
   it("creates a stub entry when the cache has no entry yet", async () => {
@@ -196,6 +201,7 @@ describe("useUpdateAnswerMutation", () => {
 
   it("replaces the answer with the server response on success", async () => {
     const qc = makeQueryClient();
+    const invalidateQueries = jest.spyOn(qc, "invalidateQueries");
     const queryKey = diaryContextQueryKey(GROUP_ID, DATE);
     qc.setQueryData(queryKey, makeContextWithEntry([makeAnswer({ body: "원래 답변" })]));
 
@@ -214,6 +220,9 @@ describe("useUpdateAnswerMutation", () => {
 
     const updated = qc.getQueryData<DiaryContextResponse>(queryKey);
     expect(updated?.entry?.answers[0]).toMatchObject(serverAnswer);
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: groupDailyFeedQueryKey(GROUP_ID, DATE),
+    });
   });
 
   it("rolls back to the previous cache state on error", async () => {
