@@ -82,7 +82,7 @@ test("leader can delete a group after exact name confirmation", async ({ context
     await route.fulfill({ status: 204, headers: apiHeaders });
   });
 
-  await page.goto("/home");
+  await page.goto("/diary");
   await page.getByRole("button", { name: "그룹 선택" }).click();
   await page.getByRole("button", { name: "그룹 삭제" }).click();
 
@@ -153,7 +153,7 @@ test("non-leader does not see delete group action", async ({ context, page }) =>
     });
   });
 
-  await page.goto("/home");
+  await page.goto("/diary");
   await page.getByRole("button", { name: "그룹 선택" }).click();
   await expect(page.getByRole("button", { name: "그룹 삭제" })).toHaveCount(0);
 });

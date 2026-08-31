@@ -53,7 +53,7 @@ const LoginForm = () => {
       const currentUser = await login({ email, password });
       queryClient.setQueryData(CURRENT_USER_QUERY_KEY, currentUser);
       const nextPath = searchParams.get("next");
-      router.push(nextPath && nextPath.startsWith("/") ? nextPath : "/home");
+      router.push(nextPath && nextPath.startsWith("/") ? nextPath : "/diary");
     } catch (err) {
       setServerError(getErrorMessage(err));
     } finally {

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 const Home = () => {
-  redirect("/home");
+  redirect("/diary");
   return null;
 };
 

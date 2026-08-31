@@ -78,7 +78,7 @@ const InvitationContent = () => {
     if (!token || isAccepting) return;
     accept(token, {
       onSuccess: (group) => {
-        router.push(`/home?group=${group.id}`);
+        router.push(`/diary?group=${group.id}`);
       },
     });
   };

@@ -87,10 +87,10 @@ test("authenticated users are redirected away from auth pages and see their sess
 
   await page.goto("/login");
 
-  await expect(page).toHaveURL(/\/home$/);
+  await expect(page).toHaveURL(/\/diary$/);
   await expect(page.getByRole("button", { name: "사용자 메뉴" })).toContainText("홍길동");
   await expect(page.getByRole("button", { name: "그룹 선택" })).toContainText("우리 가족");
-  await expect(page.getByText("멤버 2명")).toBeVisible();
+  await expect(page.getByText("멤버 2명", { exact: true })).toBeVisible();
   await expect(page.getByText("홍길동 (나)")).toBeVisible();
   await expect(page.getByText("다연")).toBeVisible();
   await expect(page.getByLabel("그룹 리더")).toBeVisible();
