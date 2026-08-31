@@ -178,7 +178,6 @@ Create:
 - `/register`
 - `/forgot-password`
 - `/reset-password`
-- `/home`
 - `/profile`
 
 Implement:

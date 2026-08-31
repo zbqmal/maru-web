@@ -55,7 +55,7 @@ jest.mock("@/hooks/use-groups", () => ({
 }));
 
 jest.mock("next/navigation", () => ({
-  usePathname: () => "/home",
+  usePathname: () => "/diary",
 }));
 
 jest.mock("@/components/group-invitations/invite-member-dialog", () => ({
@@ -88,9 +88,19 @@ describe("Sidebar", () => {
 
   it("renders the nav items", () => {
     renderWithQuery(<Sidebar currentUser={mockCurrentUser} />);
-    expect(screen.getByRole("link", { name: /오늘의 다이어리/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /오늘의 다이어리/ })).toHaveAttribute("href", "/diary");
     expect(screen.getByRole("link", { name: /달력 보기/ })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /질문 설정하기/ })).toBeInTheDocument();
+  });
+
+  it("links the logo to the diary and marks it as the current page", () => {
+    renderWithQuery(<Sidebar currentUser={mockCurrentUser} />);
+
+    expect(screen.getByRole("link", { name: /MARU/ })).toHaveAttribute("href", "/diary");
+    expect(screen.getByRole("link", { name: /오늘의 다이어리/ })).toHaveAttribute(
+      "aria-current",
+      "page"
+    );
   });
 
   it("renders group members from the active group", () => {

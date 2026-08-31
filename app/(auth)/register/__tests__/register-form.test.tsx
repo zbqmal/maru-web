@@ -89,7 +89,7 @@ describe("RegisterForm", () => {
     expect(mockRegister).not.toHaveBeenCalled();
   });
 
-  it("calls register API and redirects to /home on success", async () => {
+  it("calls register API and redirects to /diary on success", async () => {
     const user = userEvent.setup();
     mockRegister.mockResolvedValueOnce({
       id: "1",
@@ -113,7 +113,7 @@ describe("RegisterForm", () => {
         email: "user@example.com",
         password: "Str0ngP@ss",
       });
-      expect(mockPush).toHaveBeenCalledWith("/home");
+      expect(mockPush).toHaveBeenCalledWith("/diary");
     });
   });
 

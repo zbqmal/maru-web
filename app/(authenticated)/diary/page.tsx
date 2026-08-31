@@ -21,6 +21,36 @@ const getLocalDateString = () => {
   return `${year}-${month}-${day}`;
 };
 
+const StreakPlaceholderCard = () => (
+  <Card>
+    <CardHeader>
+      <CardTitle className="flex items-center gap-2 text-sm">
+        <span aria-hidden="true">🔥</span>
+        연속 기록 현황
+      </CardTitle>
+    </CardHeader>
+    <CardContent>
+      <p className="text-muted-foreground text-sm">그룹에 참여하면 연속 기록을 확인할 수 있어요.</p>
+    </CardContent>
+  </Card>
+);
+
+const CalendarPlaceholderCard = () => (
+  <Card>
+    <CardHeader>
+      <CardTitle className="flex items-center gap-2 text-sm">
+        <span aria-hidden="true">📅</span>
+        이번 달 기록
+      </CardTitle>
+    </CardHeader>
+    <CardContent>
+      <p className="text-muted-foreground text-sm">
+        그룹에 참여하면 달력에서 기록을 확인할 수 있어요.
+      </p>
+    </CardContent>
+  </Card>
+);
+
 const DiaryPage = () => {
   const { activeGroup } = useActiveGroupQuery();
   const date = getLocalDateString();
@@ -143,6 +173,12 @@ const DiaryPage = () => {
           </>
         )}
       </div>
+
+      {/* Right sidebar */}
+      <aside aria-label="요약 정보" className="hidden w-64 shrink-0 flex-col gap-4 lg:flex">
+        <StreakPlaceholderCard />
+        <CalendarPlaceholderCard />
+      </aside>
     </div>
   );
 };

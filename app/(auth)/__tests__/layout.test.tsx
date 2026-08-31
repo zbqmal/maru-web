@@ -39,6 +39,6 @@ describe("AuthLayout", () => {
       })
     ).rejects.toThrow("NEXT_REDIRECT");
 
-    expect(mockRedirect).toHaveBeenCalledWith("/home");
+    expect(mockRedirect).toHaveBeenCalledWith("/diary");
   });
 });

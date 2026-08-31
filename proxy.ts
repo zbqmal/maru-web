@@ -2,13 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { AUTH_COOKIE_NAME } from "@/lib/auth/session";
 
 export const config = {
-  matcher: [
-    "/calendar/:path*",
-    "/diary/:path*",
-    "/home/:path*",
-    "/profile/:path*",
-    "/questions/:path*",
-  ],
+  matcher: ["/calendar/:path*", "/diary/:path*", "/profile/:path*", "/questions/:path*"],
 };
 
 export const proxy = (request: NextRequest) => {

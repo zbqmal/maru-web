@@ -291,27 +291,30 @@ test("saving an answer refreshes the group daily feed", async ({ context, page }
     new RegExp(`http://${apiHostPattern}:3001/groups/g1/diary/feed\\?date=.*`),
     (route) => {
       feedRequestCount += 1;
-      const response = feedRequestCount === 1 ? feedResponse : {
-        ...feedResponse,
-        members: feedResponse.members.map((member) =>
-          member.userId === "u1"
-            ? {
-                ...member,
-                entry: {
-                  ...member.entry!,
-                  answers: [
-                    ...member.entry!.answers,
-                    {
-                      ...member.entry!.answers[0],
-                      id: "a2",
-                      body: "저장 후 피드에 표시",
-                    },
-                  ],
-                },
-              }
-            : member
-        ),
-      };
+      const response =
+        feedRequestCount === 1
+          ? feedResponse
+          : {
+              ...feedResponse,
+              members: feedResponse.members.map((member) =>
+                member.userId === "u1"
+                  ? {
+                      ...member,
+                      entry: {
+                        ...member.entry!,
+                        answers: [
+                          ...member.entry!.answers,
+                          {
+                            ...member.entry!.answers[0],
+                            id: "a2",
+                            body: "저장 후 피드에 표시",
+                          },
+                        ],
+                      },
+                    }
+                  : member
+              ),
+            };
       return route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify(response) });
     }
   );
@@ -338,18 +341,16 @@ test("saving an answer refreshes the group daily feed", async ({ context, page }
         }),
       })
   );
-  await page.route(
-    new RegExp(`http://${apiHostPattern}:3001/groups/g1/diary/answers$`),
-    (route) =>
-      route.fulfill({
-        status: 201,
-        headers: apiHeaders,
-        body: JSON.stringify({
-          ...feedResponse.members[0].entry!.answers[0],
-          id: "a2",
-          body: "저장 후 피드에 표시",
-        }),
-      })
+  await page.route(new RegExp(`http://${apiHostPattern}:3001/groups/g1/diary/answers$`), (route) =>
+    route.fulfill({
+      status: 201,
+      headers: apiHeaders,
+      body: JSON.stringify({
+        ...feedResponse.members[0].entry!.answers[0],
+        id: "a2",
+        body: "저장 후 피드에 표시",
+      }),
+    })
   );
 
   await page.goto("/diary");

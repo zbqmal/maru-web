@@ -138,7 +138,7 @@ describe("InvitationContent", () => {
       );
     });
 
-    it("redirects to home after successful acceptance", async () => {
+    it("redirects to diary after successful acceptance", async () => {
       const user = userEvent.setup();
       mockAccept.mockImplementation(
         (_token: string, { onSuccess }: { onSuccess: (group: { id: string }) => void }) => {
@@ -147,7 +147,7 @@ describe("InvitationContent", () => {
       );
       renderWithQuery(<InvitationContent />);
       await user.click(screen.getByRole("button", { name: "그룹 참가하기" }));
-      expect(mockPush).toHaveBeenCalledWith("/home?group=g1");
+      expect(mockPush).toHaveBeenCalledWith("/diary?group=g1");
     });
 
     it("shows pending label while accepting", () => {

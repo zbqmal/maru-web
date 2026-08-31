@@ -98,7 +98,7 @@ test("authenticated user sees invitation card and can accept", async ({ context,
   // Accept
   await page.getByRole("button", { name: "그룹 참가하기" }).click();
 
-  await expect(page).toHaveURL(/\/home/);
+  await expect(page).toHaveURL(/\/diary\?group=g1$/);
   expect(acceptCalled).toBe(true);
 });
 
