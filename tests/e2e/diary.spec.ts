@@ -235,6 +235,63 @@ test("diary question expand/collapse interaction", async ({ context, page }) => 
   await expect(page.getByRole("button", { name: "답변하기" })).toBeEnabled();
 });
 
+test("diary question photo picker allows selecting and removing a local preview", async ({
+  context,
+  page,
+}) => {
+  await context.addCookies([sessionCookie]);
+
+  await setupCommonRoutes(page);
+  await page.route(
+    new RegExp(`http://${apiHostPattern}:3001/groups/g1/diary/context\\?date=.*`),
+    (route) =>
+      route.fulfill({
+        status: 200,
+        headers: apiHeaders,
+        body: JSON.stringify({
+          questions: [
+            {
+              id: "q1",
+              groupId: "g1",
+              question: "오늘 가장 기뻤던 일은?",
+              displayOrder: 1,
+              isActive: true,
+              createdByUserId: "u1",
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+          ],
+          entry: null,
+        }),
+      })
+  );
+
+  await page.goto("/diary");
+
+  await page.getByRole("button", { name: /질문 1/ }).click();
+
+  const fileInput = page.getByLabel("사진 첨부하기");
+  await fileInput.setInputFiles({
+    name: "photo.png",
+    mimeType: "image/png",
+    buffer: Buffer.from([137, 80, 78, 71]),
+  });
+
+  await expect(page.getByAltText("첨부한 사진 미리보기 1")).toBeVisible();
+
+  await page.getByRole("button", { name: "사진 1 삭제" }).click();
+  await expect(page.getByAltText("첨부한 사진 미리보기 1")).not.toBeAttached();
+
+  // Selecting an unsupported file type shows a validation error instead of a preview.
+  await fileInput.setInputFiles({
+    name: "notes.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("not an image"),
+  });
+  await expect(page.getByText("JPG, PNG, WEBP, GIF 형식의 사진만 첨부할 수 있어요.")).toBeVisible();
+  await expect(page.getByAltText(/첨부한 사진 미리보기/)).not.toBeAttached();
+});
+
 test("group daily feed renders member entries", async ({ context, page }) => {
   await context.addCookies([sessionCookie]);
 
