@@ -137,7 +137,9 @@ describe("DiaryQuestionCard", () => {
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalledWith(
         expect.objectContaining({ id: "q1", questionType: "CUSTOM" }),
-        "좋은 하루"
+        "좋은 하루",
+        [],
+        expect.any(Function)
       );
     });
 
@@ -342,5 +344,48 @@ describe("DiaryQuestionCard", () => {
 
     await userEvent.click(screen.getByRole("button", { name: /질문 1/i }));
     expect(screen.queryByAltText("첨부한 사진 미리보기 1")).not.toBeInTheDocument();
+  });
+
+  it("passes selected photos to submit and shows retry state when upload fails", async () => {
+    const onSubmit = jest
+      .fn()
+      .mockImplementationOnce(async (_question, _body, photos, onPhotoUploadStateChange) => {
+        onPhotoUploadStateChange(photos[0].id, { status: "failed", progress: 0 });
+        throw new Error("upload failed");
+      })
+      .mockResolvedValueOnce(undefined);
+
+    render(
+      <DiaryQuestionCard
+        question={question}
+        index={0}
+        existingAnswer={undefined}
+        onSubmit={onSubmit}
+      />
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: /질문 1/i }));
+    await userEvent.type(screen.getByRole("textbox"), "사진과 함께 기록");
+    const photo = createFile("photo.png", "image/png");
+    await userEvent.upload(screen.getByLabelText("사진 첨부하기"), photo);
+
+    await userEvent.click(screen.getByRole("button", { name: "답변하기" }));
+
+    await waitFor(() => expect(screen.getByText("업로드 실패")).toBeInTheDocument());
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "답변 저장 또는 사진 업로드에 실패했어요. 다시 시도해주세요."
+    );
+    expect(screen.getByRole("button", { name: "다시 시도" })).toBeEnabled();
+    expect(onSubmit).toHaveBeenCalledWith(
+      question,
+      "사진과 함께 기록",
+      [expect.objectContaining({ file: photo })],
+      expect.any(Function)
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "다시 시도" }));
+
+    await waitFor(() => expect(screen.queryByRole("textbox")).not.toBeInTheDocument());
+    expect(onSubmit).toHaveBeenCalledTimes(2);
   });
 });

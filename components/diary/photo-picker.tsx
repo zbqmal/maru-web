@@ -5,13 +5,20 @@ import { ImagePlus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const MAX_PHOTOS = 3;
-export const MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
-export const ACCEPTED_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+export const MAX_PHOTO_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+export const ACCEPTED_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export interface SelectedPhoto {
   id: string;
   file: File;
   previewUrl: string;
+}
+
+export interface PhotoUploadState {
+  status: "idle" | "requesting" | "uploading" | "uploaded" | "failed";
+  progress: number;
+  storageKey?: string;
+  error?: string;
 }
 
 export interface PhotoPickerProps {
@@ -22,6 +29,7 @@ export interface PhotoPickerProps {
   maxPhotos?: number;
   error: string | null;
   onError: (message: string | null) => void;
+  uploadStates?: Record<string, PhotoUploadState>;
 }
 
 const createPhotoId = () =>
@@ -39,6 +47,7 @@ const PhotoPicker = ({
   maxPhotos = MAX_PHOTOS,
   error,
   onError,
+  uploadStates = {},
 }: PhotoPickerProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
@@ -63,7 +72,7 @@ const PhotoPicker = ({
       }
 
       if (!ACCEPTED_PHOTO_TYPES.includes(file.type)) {
-        rejectionReason = "JPG, PNG, WEBP, GIF 형식의 사진만 첨부할 수 있어요.";
+        rejectionReason = "JPG, PNG, WEBP 형식의 사진만 첨부할 수 있어요.";
         continue;
       }
 
@@ -89,33 +98,77 @@ const PhotoPicker = ({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-2">
-        {photos.map((photo, index) => (
-          <div
-            key={photo.id}
-            className="group relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-border bg-surface-muted"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element -- local blob preview, not an optimizable remote image */}
-            <img
-              src={photo.previewUrl}
-              alt={`첨부한 사진 미리보기 ${index + 1}`}
-              className="h-full w-full object-cover"
-            />
-            <button
-              type="button"
-              onClick={() => onRemove(photo.id)}
-              disabled={disabled}
-              aria-label={`사진 ${index + 1} 삭제`}
-              className={cn(
-                "absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full",
-                "bg-black/60 text-white transition-opacity hover:bg-black/80",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                "disabled:pointer-events-none disabled:opacity-50"
+        {photos.map((photo, index) => {
+          const uploadState = uploadStates[photo.id];
+          const isBusy =
+            uploadState?.status === "requesting" || uploadState?.status === "uploading";
+          const statusLabel =
+            uploadState?.status === "requesting"
+              ? "업로드 준비 중"
+              : uploadState?.status === "uploading"
+                ? `업로드 ${uploadState.progress}%`
+                : uploadState?.status === "uploaded"
+                  ? "업로드 완료"
+                  : uploadState?.status === "failed"
+                    ? "업로드 실패"
+                    : null;
+
+          return (
+            <div key={photo.id} className="flex w-20 shrink-0 flex-col gap-1">
+              <div
+                className={cn(
+                  "group relative h-20 w-20 overflow-hidden rounded-lg border bg-surface-muted",
+                  uploadState?.status === "failed" ? "border-destructive" : "border-border",
+                  uploadState?.status === "uploaded" ? "ring-2 ring-success/40" : ""
+                )}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element -- local blob preview, not an optimizable remote image */}
+                <img
+                  src={photo.previewUrl}
+                  alt={`첨부한 사진 미리보기 ${index + 1}`}
+                  className="h-full w-full object-cover"
+                />
+                {isBusy && (
+                  <div className="absolute inset-0 flex items-end bg-black/35 p-1">
+                    <div
+                      className="h-1.5 rounded-full bg-primary transition-all"
+                      style={{ width: `${Math.max(uploadState.progress, 8)}%` }}
+                      role="progressbar"
+                      aria-label={`사진 ${index + 1} 업로드 진행률`}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={uploadState.progress}
+                    />
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => onRemove(photo.id)}
+                  disabled={disabled}
+                  aria-label={`사진 ${index + 1} 삭제`}
+                  className={cn(
+                    "absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full",
+                    "bg-black/60 text-white transition-opacity hover:bg-black/80",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    "disabled:pointer-events-none disabled:opacity-50"
+                  )}
+                >
+                  <X className="h-3 w-3" aria-hidden="true" />
+                </button>
+              </div>
+              {statusLabel && (
+                <span
+                  className={cn(
+                    "truncate text-center text-[10px]",
+                    uploadState?.status === "failed" ? "text-destructive" : "text-muted-foreground"
+                  )}
+                >
+                  {statusLabel}
+                </span>
               )}
-            >
-              <X className="h-3 w-3" aria-hidden="true" />
-            </button>
-          </div>
-        ))}
+            </div>
+          );
+        })}
 
         {!isFull && (
           <button

@@ -5,7 +5,10 @@ import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { AnswerQuestionType, DiaryAnswer } from "@/lib/api/diary";
-import PhotoPicker, { type SelectedPhoto } from "@/components/diary/photo-picker";
+import PhotoPicker, {
+  type PhotoUploadState,
+  type SelectedPhoto,
+} from "@/components/diary/photo-picker";
 
 export interface DiaryQuestionCardQuestion {
   id: string;
@@ -17,7 +20,12 @@ export interface DiaryQuestionCardProps {
   question: DiaryQuestionCardQuestion;
   index: number;
   existingAnswer: DiaryAnswer | undefined;
-  onSubmit: (question: DiaryQuestionCardQuestion, body: string) => Promise<void>;
+  onSubmit: (
+    question: DiaryQuestionCardQuestion,
+    body: string,
+    photos: SelectedPhoto[],
+    onPhotoUploadStateChange: (photoId: string, state: PhotoUploadState) => void
+  ) => Promise<void>;
 }
 
 const DiaryQuestionCard = ({
@@ -32,6 +40,7 @@ const DiaryQuestionCard = ({
   const [body, setBody] = useState(existingAnswer?.body ?? "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [photos, setPhotos] = useState<SelectedPhoto[]>([]);
+  const [photoUploadStates, setPhotoUploadStates] = useState<Record<string, PhotoUploadState>>({});
   const [photoError, setPhotoError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const questionLabel = isDailyQuestion ? "오늘의 질문" : `질문 ${index + 1}`;
@@ -59,6 +68,7 @@ const DiaryQuestionCard = ({
   const resetPhotos = () => {
     photos.forEach((photo) => URL.revokeObjectURL(photo.previewUrl));
     setPhotos([]);
+    setPhotoUploadStates({});
     setPhotoError(null);
   };
 
@@ -73,6 +83,13 @@ const DiaryQuestionCard = ({
 
   const handleAddPhotos = (added: SelectedPhoto[]) => {
     setPhotos((prev) => [...prev, ...added]);
+    setPhotoUploadStates((prev) => {
+      const next = { ...prev };
+      added.forEach((photo) => {
+        next[photo.id] = { status: "idle", progress: 0 };
+      });
+      return next;
+    });
   };
 
   const handleRemovePhoto = (id: string) => {
@@ -83,6 +100,15 @@ const DiaryQuestionCard = ({
       }
       return prev.filter((photo) => photo.id !== id);
     });
+    setPhotoUploadStates((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
+
+  const handlePhotoUploadStateChange = (photoId: string, state: PhotoUploadState) => {
+    setPhotoUploadStates((prev) => ({ ...prev, [photoId]: state }));
   };
 
   const handleSubmit = async () => {
@@ -90,14 +116,18 @@ const DiaryQuestionCard = ({
 
     if (!trimmed || isSubmitting) return;
     setIsSubmitting(true);
+    setPhotoError(null);
 
     try {
-      // Photo attachments are captured locally for now; uploading them to the
-      // backend is handled separately once the presigned-upload flow lands.
-      await onSubmit(question, trimmed);
+      const photosToUpload = photos.filter(
+        (photo) => photoUploadStates[photo.id]?.status !== "uploaded"
+      );
+
+      await onSubmit(question, trimmed, photosToUpload, handlePhotoUploadStateChange);
       setIsExpanded(false);
       resetPhotos();
     } catch {
+      setPhotoError("답변 저장 또는 사진 업로드에 실패했어요. 다시 시도해주세요.");
       // keep the card expanded so the user can retry
     } finally {
       setIsSubmitting(false);
@@ -162,6 +192,7 @@ const DiaryQuestionCard = ({
             disabled={isSubmitting}
             error={photoError}
             onError={setPhotoError}
+            uploadStates={photoUploadStates}
           />
           <div className="flex justify-end">
             <Button
@@ -169,7 +200,13 @@ const DiaryQuestionCard = ({
               disabled={!body.trim() || isSubmitting}
               onClick={() => void handleSubmit()}
             >
-              {isCompleted ? "수정하기" : "답변하기"}
+              {isSubmitting
+                ? "저장 중..."
+                : Object.values(photoUploadStates).some((state) => state.status === "failed")
+                  ? "다시 시도"
+                  : isCompleted
+                    ? "수정하기"
+                    : "답변하기"}
             </Button>
           </div>
         </div>

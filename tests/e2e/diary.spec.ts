@@ -288,8 +288,113 @@ test("diary question photo picker allows selecting and removing a local preview"
     mimeType: "text/plain",
     buffer: Buffer.from("not an image"),
   });
-  await expect(page.getByText("JPG, PNG, WEBP, GIF 형식의 사진만 첨부할 수 있어요.")).toBeVisible();
+  await expect(page.getByText("JPG, PNG, WEBP 형식의 사진만 첨부할 수 있어요.")).toBeVisible();
   await expect(page.getByAltText(/첨부한 사진 미리보기/)).not.toBeAttached();
+});
+
+test("diary answer uploads a selected photo through a presigned S3 URL", async ({
+  context,
+  page,
+}) => {
+  await context.addCookies([sessionCookie]);
+
+  let presignedRequestCount = 0;
+  let s3UploadCount = 0;
+  await setupCommonRoutes(page);
+  await page.route(
+    new RegExp(`http://${apiHostPattern}:3001/groups/g1/diary/context\\?date=.*`),
+    (route) =>
+      route.fulfill({
+        status: 200,
+        headers: apiHeaders,
+        body: JSON.stringify({
+          questions: [
+            {
+              id: "q1",
+              groupId: "g1",
+              question: "오늘 가장 기뻤던 일은?",
+              displayOrder: 1,
+              isActive: true,
+              createdByUserId: "u1",
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+          ],
+          entry: null,
+        }),
+      })
+  );
+  await page.route(new RegExp(`http://${apiHostPattern}:3001/groups/g1/diary/answers$`), (route) =>
+    route.fulfill({
+      status: 201,
+      headers: apiHeaders,
+      body: JSON.stringify({
+        id: "a2",
+        diaryEntryId: "e2",
+        questionType: "CUSTOM",
+        groupQuestionId: "q1",
+        body: "사진 업로드와 함께 저장",
+        questionSnapshot: "오늘 가장 기뻤던 일은?",
+        createdAt: "2026-08-26T00:00:00.000Z",
+        updatedAt: "2026-08-26T00:00:00.000Z",
+      }),
+    })
+  );
+  await page.route(
+    new RegExp(`http://${apiHostPattern}:3001/groups/g1/diary/entries/e2/photos/upload-url$`),
+    async (route) => {
+      presignedRequestCount += 1;
+      expect(route.request().postDataJSON()).toEqual({
+        mimeType: "image/png",
+        sizeBytes: 4,
+      });
+      await route.fulfill({
+        status: 201,
+        headers: apiHeaders,
+        body: JSON.stringify({
+          uploadUrl: "https://s3.example.test/diary/e2/photo.png",
+          storageKey: "diary/e2/photo.png",
+        }),
+      });
+    }
+  );
+  await page.route("https://s3.example.test/diary/e2/photo.png", async (route) => {
+    if (route.request().method() === "OPTIONS") {
+      await route.fulfill({
+        status: 204,
+        headers: {
+          "access-control-allow-origin": "http://127.0.0.1:3000",
+          "access-control-allow-methods": "PUT, OPTIONS",
+          "access-control-allow-headers": "content-type",
+        },
+      });
+      return;
+    }
+
+    s3UploadCount += 1;
+    expect(route.request().method()).toBe("PUT");
+    expect(route.request().headers()["content-type"]).toBe("image/png");
+    await route.fulfill({
+      status: 200,
+      headers: {
+        "access-control-allow-origin": "http://127.0.0.1:3000",
+      },
+    });
+  });
+
+  await page.goto("/diary");
+  await page.getByRole("button", { name: /질문 1/ }).click();
+  await page.getByRole("textbox", { name: "질문 1 답변 입력" }).fill("사진 업로드와 함께 저장");
+  await page.getByLabel("사진 첨부하기").setInputFiles({
+    name: "photo.png",
+    mimeType: "image/png",
+    buffer: Buffer.from([137, 80, 78, 71]),
+  });
+  await page.getByRole("button", { name: "답변하기" }).click();
+
+  await expect(page.getByRole("textbox", { name: "질문 1 답변 입력" })).not.toBeAttached();
+  expect(presignedRequestCount).toBe(1);
+  expect(s3UploadCount).toBe(1);
 });
 
 test("group daily feed renders member entries", async ({ context, page }) => {

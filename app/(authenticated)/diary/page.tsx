@@ -11,7 +11,10 @@ import GroupDailyFeed from "@/components/diary/group-daily-feed";
 import { useDiaryContextQuery } from "@/hooks/use-diary-context";
 import { useActiveGroupQuery } from "@/hooks/use-groups";
 import { useCreateAnswerMutation, useUpdateAnswerMutation } from "@/hooks/use-diary-answers";
-import type { DiaryAnswer } from "@/lib/api/diary";
+import { requestDiaryPhotoUpload } from "@/lib/api/diary";
+import type { DiaryAnswer, DiaryPhotoMimeType } from "@/lib/api/diary";
+import { uploadFileToPresignedUrl } from "@/lib/api/uploads";
+import type { PhotoUploadState, SelectedPhoto } from "@/components/diary/photo-picker";
 
 const getLocalDateString = () => {
   const now = new Date();
@@ -51,6 +54,9 @@ const CalendarPlaceholderCard = () => (
   </Card>
 );
 
+const isDiaryPhotoMimeType = (mimeType: string): mimeType is DiaryPhotoMimeType =>
+  mimeType === "image/jpeg" || mimeType === "image/png" || mimeType === "image/webp";
+
 const DiaryPage = () => {
   const { activeGroup } = useActiveGroupQuery();
   const date = getLocalDateString();
@@ -79,20 +85,61 @@ const DiaryPage = () => {
       ? answers.find((a) => a.questionType === "DAILY")
       : answers.find((a) => a.questionType === "CUSTOM" && a.groupQuestionId === question.id);
 
-  const handleSubmit = async (question: DiaryQuestionCardQuestion, body: string): Promise<void> => {
+  const handleSubmit = async (
+    question: DiaryQuestionCardQuestion,
+    body: string,
+    photos: SelectedPhoto[],
+    onPhotoUploadStateChange: (photoId: string, state: PhotoUploadState) => void
+  ): Promise<void> => {
     if (!activeGroup) return;
 
     const existingAnswer = getExistingAnswer(question);
+    const savedAnswer = existingAnswer
+      ? await updateAnswerMutation.mutateAsync({ answerId: existingAnswer.id, body })
+      : await createAnswerMutation.mutateAsync({
+          date,
+          questionType: question.questionType,
+          ...(question.questionType === "CUSTOM" ? { groupQuestionId: question.id } : {}),
+          body,
+        });
 
-    if (existingAnswer) {
-      await updateAnswerMutation.mutateAsync({ answerId: existingAnswer.id, body });
-    } else {
-      await createAnswerMutation.mutateAsync({
-        date,
-        questionType: question.questionType,
-        ...(question.questionType === "CUSTOM" ? { groupQuestionId: question.id } : {}),
-        body,
-      });
+    for (const photo of photos) {
+      if (!isDiaryPhotoMimeType(photo.file.type)) {
+        onPhotoUploadStateChange(photo.id, {
+          status: "failed",
+          progress: 0,
+          error: "지원하지 않는 사진 형식입니다.",
+        });
+        throw new Error("Unsupported photo MIME type.");
+      }
+
+      try {
+        onPhotoUploadStateChange(photo.id, { status: "requesting", progress: 0 });
+        const upload = await requestDiaryPhotoUpload(activeGroup.id, savedAnswer.diaryEntryId, {
+          mimeType: photo.file.type,
+          sizeBytes: photo.file.size,
+        });
+
+        onPhotoUploadStateChange(photo.id, { status: "uploading", progress: 0 });
+        await uploadFileToPresignedUrl(upload.uploadUrl, photo.file, (progress) => {
+          onPhotoUploadStateChange(photo.id, {
+            status: "uploading",
+            progress: progress.percent,
+          });
+        });
+        onPhotoUploadStateChange(photo.id, {
+          status: "uploaded",
+          progress: 100,
+          storageKey: upload.storageKey,
+        });
+      } catch (error) {
+        onPhotoUploadStateChange(photo.id, {
+          status: "failed",
+          progress: 0,
+          error: error instanceof Error ? error.message : "사진 업로드에 실패했어요.",
+        });
+        throw error;
+      }
     }
   };
 
