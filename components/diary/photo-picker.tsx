@@ -4,7 +4,7 @@ import { useId, useRef } from "react";
 import { ImagePlus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export const MAX_PHOTOS = 4;
+export const MAX_PHOTOS = 3;
 export const MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 export const ACCEPTED_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
