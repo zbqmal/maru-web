@@ -26,7 +26,19 @@ const answer: DiaryAnswer = {
   updatedAt: "2024-01-01",
 };
 
+const createFile = (name: string, type: string, sizeInBytes = 1024) =>
+  new File([new Uint8Array(sizeInBytes)], name, { type });
+
 describe("DiaryQuestionCard", () => {
+  beforeEach(() => {
+    window.URL.createObjectURL = jest.fn(() => "blob:mock-url");
+    window.URL.revokeObjectURL = jest.fn();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it("renders collapsed by default showing question text", () => {
     render(
       <DiaryQuestionCard
@@ -241,5 +253,94 @@ describe("DiaryQuestionCard", () => {
 
     await userEvent.click(screen.getByRole("button", { name: /오늘의 질문/i }));
     expect(screen.getByRole("textbox", { name: "오늘의 질문 답변 입력" })).toBeInTheDocument();
+  });
+
+  it("shows a photo picker when expanded", async () => {
+    render(
+      <DiaryQuestionCard
+        question={question}
+        index={0}
+        existingAnswer={undefined}
+        onSubmit={jest.fn()}
+      />
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: /질문 1/i }));
+
+    expect(screen.getByLabelText("사진 첨부하기")).toBeInTheDocument();
+  });
+
+  it("shows a photo preview after selecting a file and allows removing it", async () => {
+    render(
+      <DiaryQuestionCard
+        question={question}
+        index={0}
+        existingAnswer={undefined}
+        onSubmit={jest.fn()}
+      />
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: /질문 1/i }));
+    const file = createFile("photo.png", "image/png");
+    await userEvent.upload(screen.getByLabelText("사진 첨부하기"), file);
+
+    expect(screen.getByAltText("첨부한 사진 미리보기 1")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "사진 1 삭제" }));
+    expect(screen.queryByAltText("첨부한 사진 미리보기 1")).not.toBeInTheDocument();
+  });
+
+  it("clears selected photos when the card is collapsed", async () => {
+    render(
+      <DiaryQuestionCard
+        question={question}
+        index={0}
+        existingAnswer={undefined}
+        onSubmit={jest.fn()}
+      />
+    );
+
+    const toggle = screen.getByRole("button", { name: /질문 1/i });
+    await userEvent.click(toggle);
+    await userEvent.upload(
+      screen.getByLabelText("사진 첨부하기"),
+      createFile("photo.png", "image/png")
+    );
+    expect(screen.getByAltText("첨부한 사진 미리보기 1")).toBeInTheDocument();
+
+    await userEvent.click(toggle);
+    await userEvent.click(toggle);
+
+    expect(screen.queryByAltText("첨부한 사진 미리보기 1")).not.toBeInTheDocument();
+  });
+
+  it("clears selected photos after a successful submit", async () => {
+    const onSubmit = jest.fn().mockResolvedValue(undefined);
+
+    render(
+      <DiaryQuestionCard
+        question={question}
+        index={0}
+        existingAnswer={undefined}
+        onSubmit={onSubmit}
+      />
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: /질문 1/i }));
+    await userEvent.type(screen.getByRole("textbox"), "오늘의 사진과 함께");
+    await userEvent.upload(
+      screen.getByLabelText("사진 첨부하기"),
+      createFile("photo.png", "image/png")
+    );
+    expect(screen.getByAltText("첨부한 사진 미리보기 1")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "답변하기" }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: /질문 1/i }));
+    expect(screen.queryByAltText("첨부한 사진 미리보기 1")).not.toBeInTheDocument();
   });
 });
