@@ -1,7 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
-import PhotoPicker, { MAX_PHOTOS, type SelectedPhoto } from "../photo-picker";
+import PhotoPicker from "../photo-picker";
+import { SelectedPhoto } from "@/lib/types/media.types";
+import { MAX_DIARY_PHOTOS_TO_UPLOAD } from "@/lib/constants/media.constants";
 
 const createFile = (name: string, type: string, sizeInBytes: number) => {
   const file = new File([new Uint8Array(sizeInBytes)], name, { type });
@@ -126,7 +128,7 @@ describe("PhotoPicker", () => {
     );
   });
 
-  it(`limits selection to a maximum of ${MAX_PHOTOS} photos and hides the add button when full`, async () => {
+  it(`limits selection to a maximum of ${MAX_DIARY_PHOTOS_TO_UPLOAD} photos and hides the add button when full`, async () => {
     render(<Harness maxPhotos={2} />);
 
     const input = screen.getByLabelText("사진 첨부하기");
