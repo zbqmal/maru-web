@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, LogOut, Plus, Trash2, Users } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/tailwind.utils";
 import { useActiveGroupQuery } from "@/hooks/use-groups";
 import { useActiveGroupStore } from "@/lib/store/active-group";
 import CreateGroupDialog from "@/components/groups/create-group-dialog";

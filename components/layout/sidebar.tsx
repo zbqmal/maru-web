@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, CalendarDays, HelpCircle, Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/tailwind.utils";
 import Avatar from "@/components/ui/avatar";
 import type { AuthUser } from "@/lib/api/auth";
 import { useActiveGroupQuery } from "@/hooks/use-groups";

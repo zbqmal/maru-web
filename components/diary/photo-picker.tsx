@@ -2,24 +2,14 @@
 
 import { useId, useRef } from "react";
 import { ImagePlus, X } from "lucide-react";
-import { cn } from "@/lib/utils";
-
-export const MAX_PHOTOS = 3;
-export const MAX_PHOTO_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
-export const ACCEPTED_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
-
-export interface SelectedPhoto {
-  id: string;
-  file: File;
-  previewUrl: string;
-}
-
-export interface PhotoUploadState {
-  status: "idle" | "requesting" | "uploading" | "uploaded" | "failed";
-  progress: number;
-  storageKey?: string;
-  error?: string;
-}
+import { cn } from "@/lib/utils/tailwind.utils";
+import {
+  ACCEPTED_DIARY_PHOTO_TYPES,
+  MAX_DIARY_PHOTO_SIZE_BYTES,
+  MAX_DIARY_PHOTOS_TO_UPLOAD,
+} from "@/lib/constants/media.constants";
+import { PhotoUploadState, SelectedPhoto } from "@/lib/types/media.types";
+import { createPhotoId, formatSizeToMb } from "@/lib/utils/media.utils";
 
 export interface PhotoPickerProps {
   photos: SelectedPhoto[];
@@ -32,19 +22,12 @@ export interface PhotoPickerProps {
   uploadStates?: Record<string, PhotoUploadState>;
 }
 
-const createPhotoId = () =>
-  typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-const formatSizeMb = (bytes: number) => (bytes / (1024 * 1024)).toFixed(0);
-
 const PhotoPicker = ({
   photos,
   onAdd,
   onRemove,
   disabled = false,
-  maxPhotos = MAX_PHOTOS,
+  maxPhotos = MAX_DIARY_PHOTOS_TO_UPLOAD,
   error,
   onError,
   uploadStates = {},
@@ -71,13 +54,13 @@ const PhotoPicker = ({
         break;
       }
 
-      if (!ACCEPTED_PHOTO_TYPES.includes(file.type)) {
+      if (!ACCEPTED_DIARY_PHOTO_TYPES.includes(file.type)) {
         rejectionReason = "JPG, PNG, WEBP 형식의 사진만 첨부할 수 있어요.";
         continue;
       }
 
-      if (file.size > MAX_PHOTO_SIZE_BYTES) {
-        rejectionReason = `사진 용량은 최대 ${formatSizeMb(MAX_PHOTO_SIZE_BYTES)}MB까지 첨부할 수 있어요.`;
+      if (file.size > MAX_DIARY_PHOTO_SIZE_BYTES) {
+        rejectionReason = `사진 용량은 최대 ${formatSizeToMb(MAX_DIARY_PHOTO_SIZE_BYTES)}MB까지 첨부할 수 있어요.`;
         continue;
       }
 
@@ -193,7 +176,7 @@ const PhotoPicker = ({
         ref={inputRef}
         id={inputId}
         type="file"
-        accept={ACCEPTED_PHOTO_TYPES.join(",")}
+        accept={ACCEPTED_DIARY_PHOTO_TYPES.join(",")}
         multiple
         disabled={disabled}
         onChange={(e) => {
@@ -206,7 +189,8 @@ const PhotoPicker = ({
       />
 
       <p className="text-xs text-muted-foreground">
-        최대 {maxPhotos}장, 장당 {formatSizeMb(MAX_PHOTO_SIZE_BYTES)}MB까지 첨부할 수 있어요.
+        최대 {maxPhotos}장, 장당 {formatSizeToMb(MAX_DIARY_PHOTO_SIZE_BYTES)}MB까지 첨부할 수
+        있어요.
       </p>
 
       {error && (

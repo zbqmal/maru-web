@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/tailwind.utils";
 
 type HeadingLevel = "h1" | "h2" | "h3" | "h4";
 

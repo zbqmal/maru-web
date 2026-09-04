@@ -12,17 +12,11 @@ import { useDiaryContextQuery } from "@/hooks/use-diary-context";
 import { useActiveGroupQuery } from "@/hooks/use-groups";
 import { useCreateAnswerMutation, useUpdateAnswerMutation } from "@/hooks/use-diary-answers";
 import { requestDiaryPhotoUpload } from "@/lib/api/diary";
-import type { DiaryAnswer, DiaryPhotoMimeType } from "@/lib/api/diary";
+import type { DiaryAnswer } from "@/lib/api/diary";
 import { uploadFileToPresignedUrl } from "@/lib/api/uploads";
-import type { PhotoUploadState, SelectedPhoto } from "@/components/diary/photo-picker";
-
-const getLocalDateString = () => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
+import { isDiaryPhotoMimeType } from "@/lib/utils/media.utils";
+import { getLocalDateString } from "@/lib/utils/date.utils";
+import { PhotoUploadState, SelectedPhoto } from "@/lib/types/media.types";
 
 const StreakPlaceholderCard = () => (
   <Card>
@@ -53,9 +47,6 @@ const CalendarPlaceholderCard = () => (
     </CardContent>
   </Card>
 );
-
-const isDiaryPhotoMimeType = (mimeType: string): mimeType is DiaryPhotoMimeType =>
-  mimeType === "image/jpeg" || mimeType === "image/png" || mimeType === "image/webp";
 
 const DiaryPage = () => {
   const { activeGroup } = useActiveGroupQuery();

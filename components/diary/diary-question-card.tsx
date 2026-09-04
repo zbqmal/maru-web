@@ -3,12 +3,10 @@
 import { useState, useRef, useEffect } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/tailwind.utils";
 import type { AnswerQuestionType, DiaryAnswer } from "@/lib/api/diary";
-import PhotoPicker, {
-  type PhotoUploadState,
-  type SelectedPhoto,
-} from "@/components/diary/photo-picker";
+import PhotoPicker from "@/components/diary/photo-picker";
+import { PhotoUploadState, SelectedPhoto } from "@/lib/types/media.types";
 
 export interface DiaryQuestionCardQuestion {
   id: string;
