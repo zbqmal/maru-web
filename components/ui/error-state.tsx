@@ -1,5 +1,5 @@
 import { AlertCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/tailwind.utils";
 import { Button } from "./button";
 
 interface ErrorStateProps extends React.HTMLAttributes<HTMLDivElement> {

@@ -46,6 +46,18 @@ export interface UpdateAnswerInput {
   body: string;
 }
 
+export type DiaryPhotoMimeType = "image/jpeg" | "image/png" | "image/webp";
+
+export interface RequestDiaryPhotoUploadInput {
+  mimeType: DiaryPhotoMimeType;
+  sizeBytes: number;
+}
+
+export interface PresignedUploadResponse {
+  uploadUrl: string;
+  storageKey: string;
+}
+
 export interface FeedMemberUser {
   id: string;
   name: string;
@@ -91,4 +103,17 @@ export const updateAnswer = (groupId: string, answerId: string, input: UpdateAns
 export const getGroupDailyFeed = (groupId: string, date: string) =>
   apiRequest<GroupDailyFeedResponse>(
     `/groups/${groupId}/diary/feed?date=${encodeURIComponent(date)}`
+  );
+
+export const requestDiaryPhotoUpload = (
+  groupId: string,
+  diaryEntryId: string,
+  input: RequestDiaryPhotoUploadInput
+) =>
+  apiRequest<PresignedUploadResponse>(
+    `/groups/${groupId}/diary/entries/${diaryEntryId}/photos/upload-url`,
+    {
+      method: "POST",
+      body: input,
+    }
   );

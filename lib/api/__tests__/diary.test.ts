@@ -1,9 +1,22 @@
-import { createAnswer, getDiaryContext, updateAnswer } from "@/lib/api/diary";
+import {
+  createAnswer,
+  getDiaryContext,
+  requestDiaryPhotoUpload,
+  updateAnswer,
+} from "@/lib/api/diary";
 
 describe("diary api", () => {
   const originalFetch = global.fetch;
 
-  const createMockResponse = ({ ok, status, jsonData }: { ok: boolean; status: number; jsonData?: unknown }) =>
+  const createMockResponse = ({
+    ok,
+    status,
+    jsonData,
+  }: {
+    ok: boolean;
+    status: number;
+    jsonData?: unknown;
+  }) =>
     ({
       ok,
       status,
@@ -78,5 +91,36 @@ describe("diary api", () => {
       expect.objectContaining({ method: "PATCH", credentials: "include" })
     );
     expect(result).toMatchObject({ id: "a1", body: "수정됨" });
+  });
+
+  it("calls POST /groups/:id/diary/entries/:entryId/photos/upload-url to request a presigned upload URL", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue(
+      createMockResponse({
+        ok: true,
+        status: 201,
+        jsonData: {
+          uploadUrl: "https://s3.example.test/upload",
+          storageKey: "diary/e1/photo.png",
+        },
+      })
+    );
+
+    const result = await requestDiaryPhotoUpload("g1", "e1", {
+      mimeType: "image/png",
+      sizeBytes: 1024,
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://localhost:3001/groups/g1/diary/entries/e1/photos/upload-url",
+      expect.objectContaining({
+        method: "POST",
+        credentials: "include",
+        body: JSON.stringify({ mimeType: "image/png", sizeBytes: 1024 }),
+      })
+    );
+    expect(result).toEqual({
+      uploadUrl: "https://s3.example.test/upload",
+      storageKey: "diary/e1/photo.png",
+    });
   });
 });

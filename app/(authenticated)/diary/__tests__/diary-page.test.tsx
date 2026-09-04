@@ -3,6 +3,8 @@ import userEvent from "@testing-library/user-event";
 import DiaryPage from "../page";
 import type { Group } from "@/lib/api/groups";
 import type { DiaryContextResponse, DiaryAnswer } from "@/lib/api/diary";
+import { requestDiaryPhotoUpload } from "@/lib/api/diary";
+import { uploadFileToPresignedUrl } from "@/lib/api/uploads";
 
 const mockGroup: Group = {
   id: "g1",
@@ -116,6 +118,15 @@ jest.mock("@/hooks/use-diary-answers", () => ({
   useUpdateAnswerMutation: () => ({ mutateAsync: mockUpdateAnswerMutateAsync }),
 }));
 
+jest.mock("@/lib/api/diary", () => ({
+  ...jest.requireActual("@/lib/api/diary"),
+  requestDiaryPhotoUpload: jest.fn(),
+}));
+
+jest.mock("@/lib/api/uploads", () => ({
+  uploadFileToPresignedUrl: jest.fn(),
+}));
+
 describe("DiaryPage", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -128,12 +139,22 @@ describe("DiaryPage", () => {
     };
     mockCreateAnswerMutateAsync.mockResolvedValue(mockAnswer);
     mockUpdateAnswerMutateAsync.mockResolvedValue({ ...mockAnswer, body: "수정된 답변" });
+    (requestDiaryPhotoUpload as jest.Mock).mockResolvedValue({
+      uploadUrl: "https://s3.example.test/upload",
+      storageKey: "diary/e1/photo.png",
+    });
+    (uploadFileToPresignedUrl as jest.Mock).mockResolvedValue(undefined);
+    window.URL.createObjectURL = jest.fn(() => "blob:mock-url");
+    window.URL.revokeObjectURL = jest.fn();
   });
 
   it("passes the active group and diary date to the daily feed", () => {
     render(<DiaryPage />);
 
-    expect(mockGroupDailyFeedQuery).toHaveBeenCalledWith("g1", expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/));
+    expect(mockGroupDailyFeedQuery).toHaveBeenCalledWith(
+      "g1",
+      expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/)
+    );
   });
 
   it("renders group header and today questions with answered status", () => {
@@ -144,7 +165,9 @@ describe("DiaryPage", () => {
     expect(screen.getByRole("list", { name: "오늘의 질문 목록" })).toBeInTheDocument();
     expect(screen.getByText("오늘 가장 기뻤던 일은?")).toBeInTheDocument();
     expect(screen.getByText("오늘 스스로를 칭찬하고 싶은 순간은?")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /오늘의 질문 오늘 스스로를 칭찬하고 싶은 순간은\?/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /오늘의 질문 오늘 스스로를 칭찬하고 싶은 순간은\?/ })
+    ).toBeInTheDocument();
     expect(screen.getByLabelText("작성 완료")).toBeInTheDocument();
     expect(screen.getByText("멤버 2명과 함께 오늘의 질문에 답해보세요.")).toBeInTheDocument();
   });
@@ -158,7 +181,9 @@ describe("DiaryPage", () => {
   it("shows loading state", () => {
     mockDiaryResult = { data: undefined, isLoading: true, isError: false, refetch: jest.fn() };
     render(<DiaryPage />);
-    expect(screen.getByRole("status", { name: "오늘의 다이어리를 불러오는 중..." })).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: "오늘의 다이어리를 불러오는 중..." })
+    ).toBeInTheDocument();
   });
 
   it("shows error state and retries", async () => {
@@ -216,7 +241,10 @@ describe("DiaryPage", () => {
     render(<DiaryPage />);
 
     await userEvent.click(screen.getByRole("button", { name: /오늘의 질문/i }));
-    await userEvent.type(screen.getByRole("textbox", { name: "오늘의 질문 답변 입력" }), "오늘은 포기하지 않았다");
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "오늘의 질문 답변 입력" }),
+      "오늘은 포기하지 않았다"
+    );
     await userEvent.click(screen.getByRole("button", { name: "답변하기" }));
 
     await waitFor(() =>
@@ -304,6 +332,39 @@ describe("DiaryPage", () => {
     await userEvent.type(screen.getByRole("textbox"), "답변 내용");
     await userEvent.click(screen.getByRole("button", { name: "답변하기" }));
 
+    await waitFor(() => expect(screen.queryByRole("textbox")).not.toBeInTheDocument());
+  });
+
+  it("requests a presigned URL and uploads selected photos after saving an answer", async () => {
+    mockDiaryResult = {
+      data: mockContextNoEntry,
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    };
+    (uploadFileToPresignedUrl as jest.Mock).mockImplementation(async (_url, _file, onProgress) => {
+      onProgress({ percent: 75, loaded: 768, total: 1024 });
+    });
+
+    render(<DiaryPage />);
+
+    await userEvent.click(screen.getByRole("button", { name: /질문 1/i }));
+    await userEvent.type(screen.getByRole("textbox"), "사진과 함께 저장");
+    const photo = new File([new Uint8Array(1024)], "photo.png", { type: "image/png" });
+    await userEvent.upload(screen.getByLabelText("사진 첨부하기"), photo);
+    await userEvent.click(screen.getByRole("button", { name: "답변하기" }));
+
+    await waitFor(() =>
+      expect(requestDiaryPhotoUpload).toHaveBeenCalledWith("g1", "e1", {
+        mimeType: "image/png",
+        sizeBytes: 1024,
+      })
+    );
+    expect(uploadFileToPresignedUrl).toHaveBeenCalledWith(
+      "https://s3.example.test/upload",
+      photo,
+      expect.any(Function)
+    );
     await waitFor(() => expect(screen.queryByRole("textbox")).not.toBeInTheDocument());
   });
 

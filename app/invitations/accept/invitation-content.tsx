@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Users, AlertCircle, Clock, XCircle } from "lucide-react";
 import { buttonVariants, Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/tailwind.utils";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { useCurrentUserQuery } from "@/hooks/use-current-user";
 import { useValidateInvitationQuery, useAcceptInvitationMutation } from "@/hooks/use-groups";

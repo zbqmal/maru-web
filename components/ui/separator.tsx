@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/tailwind.utils";
 
 interface SeparatorProps extends React.HTMLAttributes<HTMLHRElement> {
   orientation?: "horizontal" | "vertical";
