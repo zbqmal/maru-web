@@ -14,7 +14,7 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   webServer: {
-    command: `NEXT_PUBLIC_API_URL=${process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:3001"} yarn dev --port ${PORT}`,
+    command: `NEXT_PUBLIC_API_URL=${process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:3001"} NEXT_PUBLIC_MEDIA_BASE_URL=${process.env.NEXT_PUBLIC_MEDIA_BASE_URL ?? "https://media.example.test"} yarn dev --port ${PORT}`,
     url: `http://127.0.0.1:${PORT}`,
     reuseExistingServer: !process.env.CI,
   },

@@ -11,10 +11,11 @@ import GroupDailyFeed from "@/components/diary/group-daily-feed";
 import { useDiaryContextQuery } from "@/hooks/use-diary-context";
 import { useActiveGroupQuery } from "@/hooks/use-groups";
 import { useCreateAnswerMutation, useUpdateAnswerMutation } from "@/hooks/use-diary-answers";
+import { useRegisterDiaryPhotoMutation } from "@/hooks/use-diary-photos";
 import { requestDiaryPhotoUpload } from "@/lib/api/diary";
 import type { DiaryAnswer } from "@/lib/api/diary";
 import { uploadFileToPresignedUrl } from "@/lib/api/uploads";
-import { isDiaryPhotoMimeType } from "@/lib/utils/media.utils";
+import { getImageDimensions, isDiaryPhotoMimeType } from "@/lib/utils/media.utils";
 import { getLocalDateString } from "@/lib/utils/date.utils";
 import { PhotoUploadState, SelectedPhoto } from "@/lib/types/media.types";
 
@@ -56,6 +57,7 @@ const DiaryPage = () => {
   const groupId = activeGroup?.id ?? "";
   const createAnswerMutation = useCreateAnswerMutation(groupId, date);
   const updateAnswerMutation = useUpdateAnswerMutation(groupId, date);
+  const registerPhotoMutation = useRegisterDiaryPhotoMutation(groupId, date);
 
   const answers = data?.entry?.answers ?? [];
   const customQuestions = data?.questions ?? [];
@@ -118,6 +120,19 @@ const DiaryPage = () => {
             progress: progress.percent,
           });
         });
+
+        const { width, height } = await getImageDimensions(photo.file);
+        await registerPhotoMutation.mutateAsync({
+          diaryEntryId: savedAnswer.diaryEntryId,
+          input: {
+            storageKey: upload.storageKey,
+            mimeType: photo.file.type,
+            width,
+            height,
+            sizeBytes: photo.file.size,
+          },
+        });
+
         onPhotoUploadStateChange(photo.id, {
           status: "uploaded",
           progress: 100,

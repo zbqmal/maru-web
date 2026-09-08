@@ -90,6 +90,7 @@ let mockDiaryResult: {
 
 const mockCreateAnswerMutateAsync = jest.fn();
 const mockUpdateAnswerMutateAsync = jest.fn();
+const mockRegisterPhotoMutateAsync = jest.fn();
 const mockGroupDailyFeedQuery = jest.fn();
 
 jest.mock("@/hooks/use-current-user", () => ({
@@ -118,6 +119,11 @@ jest.mock("@/hooks/use-diary-answers", () => ({
   useUpdateAnswerMutation: () => ({ mutateAsync: mockUpdateAnswerMutateAsync }),
 }));
 
+jest.mock("@/hooks/use-diary-photos", () => ({
+  useRegisterDiaryPhotoMutation: () => ({ mutateAsync: mockRegisterPhotoMutateAsync }),
+  useDeleteDiaryPhotoMutation: () => ({ mutate: jest.fn(), isPending: false, variables: undefined }),
+}));
+
 jest.mock("@/lib/api/diary", () => ({
   ...jest.requireActual("@/lib/api/diary"),
   requestDiaryPhotoUpload: jest.fn(),
@@ -139,6 +145,18 @@ describe("DiaryPage", () => {
     };
     mockCreateAnswerMutateAsync.mockResolvedValue(mockAnswer);
     mockUpdateAnswerMutateAsync.mockResolvedValue({ ...mockAnswer, body: "수정된 답변" });
+    mockRegisterPhotoMutateAsync.mockResolvedValue({
+      id: "p1",
+      diaryEntryId: "e1",
+      uploadedByUserId: "u1",
+      storageKey: "diary/e1/photo.png",
+      mimeType: "image/png",
+      width: 800,
+      height: 600,
+      sizeBytes: 1024,
+      displayOrder: 0,
+      createdAt: "2026-08-25T00:00:00.000Z",
+    });
     (requestDiaryPhotoUpload as jest.Mock).mockResolvedValue({
       uploadUrl: "https://s3.example.test/upload",
       storageKey: "diary/e1/photo.png",
@@ -146,6 +164,18 @@ describe("DiaryPage", () => {
     (uploadFileToPresignedUrl as jest.Mock).mockResolvedValue(undefined);
     window.URL.createObjectURL = jest.fn(() => "blob:mock-url");
     window.URL.revokeObjectURL = jest.fn();
+
+    class MockImage {
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      naturalWidth = 800;
+      naturalHeight = 600;
+      set src(_value: string) {
+        setTimeout(() => this.onload?.(), 0);
+      }
+    }
+    // @ts-expect-error -- simplified stand-in for the browser Image constructor
+    global.Image = MockImage;
   });
 
   it("passes the active group and diary date to the daily feed", () => {
@@ -364,6 +394,18 @@ describe("DiaryPage", () => {
       "https://s3.example.test/upload",
       photo,
       expect.any(Function)
+    );
+    await waitFor(() =>
+      expect(mockRegisterPhotoMutateAsync).toHaveBeenCalledWith({
+        diaryEntryId: "e1",
+        input: {
+          storageKey: "diary/e1/photo.png",
+          mimeType: "image/png",
+          width: 800,
+          height: 600,
+          sizeBytes: 1024,
+        },
+      })
     );
     await waitFor(() => expect(screen.queryByRole("textbox")).not.toBeInTheDocument());
   });

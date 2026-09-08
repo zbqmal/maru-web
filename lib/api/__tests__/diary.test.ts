@@ -1,6 +1,8 @@
 import {
   createAnswer,
+  deleteDiaryPhoto,
   getDiaryContext,
+  registerDiaryPhoto,
   requestDiaryPhotoUpload,
   updateAnswer,
 } from "@/lib/api/diary";
@@ -122,5 +124,60 @@ describe("diary api", () => {
       uploadUrl: "https://s3.example.test/upload",
       storageKey: "diary/e1/photo.png",
     });
+  });
+
+  it("calls POST /groups/:id/diary/entries/:entryId/photos to register uploaded photo metadata", async () => {
+    const photoFixture = {
+      id: "p1",
+      diaryEntryId: "e1",
+      uploadedByUserId: "u1",
+      storageKey: "diary-entries/e1/photos/photo.png",
+      mimeType: "image/png",
+      width: 800,
+      height: 600,
+      sizeBytes: 1024,
+      displayOrder: 0,
+      createdAt: "2026-08-26T00:00:00.000Z",
+    };
+    (global.fetch as jest.Mock).mockResolvedValue(
+      createMockResponse({ ok: true, status: 201, jsonData: photoFixture })
+    );
+
+    const result = await registerDiaryPhoto("g1", "e1", {
+      storageKey: "diary-entries/e1/photos/photo.png",
+      mimeType: "image/png",
+      width: 800,
+      height: 600,
+      sizeBytes: 1024,
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://localhost:3001/groups/g1/diary/entries/e1/photos",
+      expect.objectContaining({
+        method: "POST",
+        credentials: "include",
+        body: JSON.stringify({
+          storageKey: "diary-entries/e1/photos/photo.png",
+          mimeType: "image/png",
+          width: 800,
+          height: 600,
+          sizeBytes: 1024,
+        }),
+      })
+    );
+    expect(result).toEqual(photoFixture);
+  });
+
+  it("calls DELETE /groups/:id/diary/entries/:entryId/photos/:photoId to delete a photo", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue(
+      createMockResponse({ ok: true, status: 204, jsonData: undefined })
+    );
+
+    await deleteDiaryPhoto("g1", "e1", "p1");
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://localhost:3001/groups/g1/diary/entries/e1/photos/p1",
+      expect.objectContaining({ method: "DELETE", credentials: "include" })
+    );
   });
 });
