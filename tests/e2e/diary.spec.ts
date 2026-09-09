@@ -298,8 +298,17 @@ test("diary answer uploads a selected photo through a presigned S3 URL", async (
 }) => {
   await context.addCookies([sessionCookie]);
 
+  // Minimal valid 1x1 transparent-free RGBA PNG so the browser can decode
+  // its natural dimensions when the app registers photo metadata.
+  const pngBuffer = Buffer.from([
+    137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0,
+    0, 0, 31, 21, 196, 137, 0, 0, 0, 13, 73, 68, 65, 84, 120, 156, 99, 248, 207, 192, 240, 31, 0,
+    5, 0, 1, 255, 137, 153, 61, 29, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130,
+  ]);
+
   let presignedRequestCount = 0;
   let s3UploadCount = 0;
+  let registerRequestCount = 0;
   await setupCommonRoutes(page);
   await page.route(
     new RegExp(`http://${apiHostPattern}:3001/groups/g1/diary/context\\?date=.*`),
@@ -346,7 +355,7 @@ test("diary answer uploads a selected photo through a presigned S3 URL", async (
       presignedRequestCount += 1;
       expect(route.request().postDataJSON()).toEqual({
         mimeType: "image/png",
-        sizeBytes: 4,
+        sizeBytes: pngBuffer.length,
       });
       await route.fulfill({
         status: 201,
@@ -381,6 +390,35 @@ test("diary answer uploads a selected photo through a presigned S3 URL", async (
       },
     });
   });
+  await page.route(
+    new RegExp(`http://${apiHostPattern}:3001/groups/g1/diary/entries/e2/photos$`),
+    async (route) => {
+      registerRequestCount += 1;
+      expect(route.request().postDataJSON()).toEqual({
+        storageKey: "diary/e2/photo.png",
+        mimeType: "image/png",
+        width: 1,
+        height: 1,
+        sizeBytes: pngBuffer.length,
+      });
+      await route.fulfill({
+        status: 201,
+        headers: apiHeaders,
+        body: JSON.stringify({
+          id: "p1",
+          diaryEntryId: "e2",
+          uploadedByUserId: "u1",
+          storageKey: "diary/e2/photo.png",
+          mimeType: "image/png",
+          width: 1,
+          height: 1,
+          sizeBytes: pngBuffer.length,
+          displayOrder: 0,
+          createdAt: "2026-08-26T00:00:00.000Z",
+        }),
+      });
+    }
+  );
 
   await page.goto("/diary");
   await page.getByRole("button", { name: /질문 1/ }).click();
@@ -388,13 +426,14 @@ test("diary answer uploads a selected photo through a presigned S3 URL", async (
   await page.getByLabel("사진 첨부하기").setInputFiles({
     name: "photo.png",
     mimeType: "image/png",
-    buffer: Buffer.from([137, 80, 78, 71]),
+    buffer: pngBuffer,
   });
   await page.getByRole("button", { name: "답변하기" }).click();
 
   await expect(page.getByRole("textbox", { name: "질문 1 답변 입력" })).not.toBeAttached();
   expect(presignedRequestCount).toBe(1);
   expect(s3UploadCount).toBe(1);
+  expect(registerRequestCount).toBe(1);
 });
 
 test("group daily feed renders member entries", async ({ context, page }) => {
@@ -442,6 +481,104 @@ test("group daily feed renders member entries", async ({ context, page }) => {
   await expect(memberCard.getByText("멤버")).toBeVisible();
   await expect(memberCard.getByText("아직 오늘의 기록을 남기지 않았어요.")).toBeVisible();
   await expect(page.getByRole("img", { name: "아직 미작성" })).not.toBeAttached();
+});
+
+test("group daily feed renders a photo gallery and allows the owner to remove a photo", async ({
+  context,
+  page,
+}) => {
+  await context.addCookies([sessionCookie]);
+
+  const photo = {
+    id: "p1",
+    diaryEntryId: "e1",
+    uploadedByUserId: "u1",
+    storageKey: "diary/e1/photo-1.png",
+    mimeType: "image/png",
+    width: 800,
+    height: 600,
+    sizeBytes: 1024,
+    displayOrder: 0,
+    createdAt: "2026-08-26T00:00:00.000Z",
+  };
+  const feedWithPhotos = {
+    ...feedResponse,
+    members: [
+      { ...feedResponse.members[0], entry: { ...feedResponse.members[0].entry, photos: [photo] } },
+      feedResponse.members[1],
+    ],
+  };
+
+  await page.route(new RegExp(`http://${apiHostPattern}:3001/me$`), (route) =>
+    route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify(user) })
+  );
+  await page.route(new RegExp(`http://${apiHostPattern}:3001/groups$`), (route) =>
+    route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify([group]) })
+  );
+  let feedRequestCount = 0;
+  await page.route(
+    new RegExp(`http://${apiHostPattern}:3001/groups/g1/diary/feed\\?date=.*`),
+    (route) => {
+      feedRequestCount += 1;
+      const body = feedRequestCount === 1 ? feedWithPhotos : { ...feedWithPhotos, members: [feedWithPhotos.members[1]].concat({ ...feedWithPhotos.members[0], entry: { ...feedWithPhotos.members[0].entry, photos: [] } }) };
+      route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify(body) });
+    }
+  );
+  await page.route(
+    new RegExp(`http://${apiHostPattern}:3001/groups/g1/diary/context\\?date=.*`),
+    (route) =>
+      route.fulfill({
+        status: 200,
+        headers: apiHeaders,
+        body: JSON.stringify({
+          questions: [
+            {
+              id: "q1",
+              groupId: "g1",
+              question: "오늘 가장 좋았던 순간은?",
+              displayOrder: 1,
+              isActive: true,
+              createdByUserId: "u1",
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+          ],
+          entry: null,
+        }),
+      })
+  );
+  await page.route(`https://media.example.test/diary/e1/photo-1.png`, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "image/png",
+      body: Buffer.from([
+        137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6,
+        0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 13, 73, 68, 65, 84, 120, 156, 99, 248, 207, 192, 240,
+        31, 0, 5, 0, 1, 255, 137, 153, 61, 29, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130,
+      ]),
+    })
+  );
+  let deleteRequestCount = 0;
+  await page.route(
+    new RegExp(`http://${apiHostPattern}:3001/groups/g1/diary/entries/e1/photos/p1$`),
+    async (route) => {
+      deleteRequestCount += 1;
+      expect(route.request().method()).toBe("DELETE");
+      await route.fulfill({ status: 204 });
+    }
+  );
+
+  await page.goto("/diary");
+
+  const leaderCard = page.getByLabel("리더의 오늘 기록");
+  await expect(leaderCard.getByAltText("다이어리 사진 1")).toBeVisible();
+
+  const removeButton = leaderCard.getByRole("button", { name: "사진 1 삭제" });
+  await expect(removeButton).toBeVisible();
+  await removeButton.click();
+
+  await expect.poll(() => deleteRequestCount).toBe(1);
+  await expect(leaderCard.getByAltText("다이어리 사진 1")).not.toBeAttached();
 });
 
 test("saving an answer refreshes the group daily feed", async ({ context, page }) => {

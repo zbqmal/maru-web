@@ -18,6 +18,7 @@ export interface DiaryEntryContext {
   id: string;
   diaryDate: string;
   answers: DiaryAnswer[];
+  photos?: DiaryPhoto[];
   createdAt: string;
   updatedAt: string;
 }
@@ -58,6 +59,27 @@ export interface PresignedUploadResponse {
   storageKey: string;
 }
 
+export interface DiaryPhoto {
+  id: string;
+  diaryEntryId: string;
+  uploadedByUserId: string;
+  storageKey: string;
+  mimeType: DiaryPhotoMimeType;
+  width: number;
+  height: number;
+  sizeBytes: number;
+  displayOrder: number;
+  createdAt: string;
+}
+
+export interface RegisterDiaryPhotoInput {
+  storageKey: string;
+  mimeType: DiaryPhotoMimeType;
+  width: number;
+  height: number;
+  sizeBytes: number;
+}
+
 export interface FeedMemberUser {
   id: string;
   name: string;
@@ -68,6 +90,7 @@ export interface FeedEntry {
   id: string;
   diaryDate: string;
   answers: DiaryAnswer[];
+  photos?: DiaryPhoto[];
   createdAt: string;
   updatedAt: string;
 }
@@ -117,3 +140,18 @@ export const requestDiaryPhotoUpload = (
       body: input,
     }
   );
+
+export const registerDiaryPhoto = (
+  groupId: string,
+  diaryEntryId: string,
+  input: RegisterDiaryPhotoInput
+) =>
+  apiRequest<DiaryPhoto>(`/groups/${groupId}/diary/entries/${diaryEntryId}/photos`, {
+    method: "POST",
+    body: input,
+  });
+
+export const deleteDiaryPhoto = (groupId: string, diaryEntryId: string, photoId: string) =>
+  apiRequest<null>(`/groups/${groupId}/diary/entries/${diaryEntryId}/photos/${photoId}`, {
+    method: "DELETE",
+  });
