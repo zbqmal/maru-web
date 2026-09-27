@@ -31,20 +31,27 @@ const PhotoGallery = ({
   onPhotoLoadError,
   className,
 }: PhotoGalleryProps) => {
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(null);
 
   if (photos.length === 0) return null;
 
   const orderedPhotos = [...photos].sort((a, b) => a.displayOrder - b.displayOrder);
-  const selectedPhoto =
-    selectedIndex !== null ? (orderedPhotos[selectedIndex] ?? null) : null;
+  const selectedIndex =
+    selectedPhotoId === null
+      ? -1
+      : orderedPhotos.findIndex((photo) => photo.id === selectedPhotoId);
+  const selectedPhoto = selectedIndex === -1 ? null : orderedPhotos[selectedIndex];
 
-  const showPrev = () =>
-    setSelectedIndex((prev) =>
-      prev === null ? prev : (prev - 1 + orderedPhotos.length) % orderedPhotos.length
-    );
-  const showNext = () =>
-    setSelectedIndex((prev) => (prev === null ? prev : (prev + 1) % orderedPhotos.length));
+  const showPrev = () => {
+    if (selectedIndex === -1) return;
+    const nextIndex = (selectedIndex - 1 + orderedPhotos.length) % orderedPhotos.length;
+    setSelectedPhotoId(orderedPhotos[nextIndex].id);
+  };
+  const showNext = () => {
+    if (selectedIndex === -1) return;
+    const nextIndex = (selectedIndex + 1) % orderedPhotos.length;
+    setSelectedPhotoId(orderedPhotos[nextIndex].id);
+  };
 
   return (
     <div
@@ -54,12 +61,12 @@ const PhotoGallery = ({
     >
       {orderedPhotos.map((photo, index) => (
         <PhotoThumbnail
-          key={photo.id}
+          key={`${photo.id}:${photo.url}`}
           photo={photo}
           index={index}
           canRemove={canRemove}
           isRemoving={removingPhotoId === photo.id}
-          onSelect={() => setSelectedIndex(index)}
+          onSelect={() => setSelectedPhotoId(photo.id)}
           onRemove={(photoId) => onRemove?.(photoId)}
           onLoadError={onPhotoLoadError}
         />
@@ -67,7 +74,7 @@ const PhotoGallery = ({
 
       <Dialog
         open={selectedPhoto !== null}
-        onClose={() => setSelectedIndex(null)}
+        onClose={() => setSelectedPhotoId(null)}
         className="max-w-2xl bg-transparent p-0 shadow-none"
         titleId="photo-gallery-dialog-title"
       >
@@ -75,9 +82,9 @@ const PhotoGallery = ({
           <div className="flex flex-col gap-3">
             <DialogHeader className="px-1">
               <DialogTitle id="photo-gallery-dialog-title" className="sr-only">
-                사진 {(selectedIndex ?? 0) + 1} / {orderedPhotos.length}
+                사진 {selectedIndex + 1} / {orderedPhotos.length}
               </DialogTitle>
-              <DialogClose onClose={() => setSelectedIndex(null)} />
+              <DialogClose onClose={() => setSelectedPhotoId(null)} />
             </DialogHeader>
             <DialogBody className="relative flex items-center justify-center">
               {orderedPhotos.length > 1 && (
@@ -93,7 +100,7 @@ const PhotoGallery = ({
               {/* eslint-disable-next-line @next/next/no-img-element -- short-lived presigned S3 URL from the backend, unsuitable for next/image's remote-pattern allowlist */}
               <img
                 src={selectedPhoto.url}
-                alt={`다이어리 사진 ${(selectedIndex ?? 0) + 1}`}
+                alt={`다이어리 사진 ${selectedIndex + 1}`}
                 className="max-h-[70vh] w-full rounded-lg object-contain"
                 onError={onPhotoLoadError}
               />

@@ -47,6 +47,23 @@ describe("PhotoGallery", () => {
     expect(screen.queryByAltText("다이어리 사진 1")).not.toBeInTheDocument();
   });
 
+  it("recovers from an error placeholder once a refreshed photo.url is provided", () => {
+    const { rerender } = render(<PhotoGallery photos={[makePhoto()]} />);
+
+    fireEvent.error(screen.getByAltText("다이어리 사진 1"));
+    expect(screen.getByText("이미지를 불러올 수 없어요")).toBeInTheDocument();
+
+    rerender(
+      <PhotoGallery photos={[makePhoto({ url: "https://media.example.test/refreshed.png" })]} />
+    );
+
+    expect(screen.queryByText("이미지를 불러올 수 없어요")).not.toBeInTheDocument();
+    expect(screen.getByAltText("다이어리 사진 1")).toHaveAttribute(
+      "src",
+      "https://media.example.test/refreshed.png"
+    );
+  });
+
   it("opens a lightbox with next/prev navigation when a thumbnail is clicked", async () => {
     const user = userEvent.setup();
     const photos = [
