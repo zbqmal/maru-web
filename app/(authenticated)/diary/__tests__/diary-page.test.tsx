@@ -150,6 +150,7 @@ describe("DiaryPage", () => {
       diaryEntryId: "e1",
       uploadedByUserId: "u1",
       storageKey: "diary/e1/photo.png",
+      url: "https://media.example.test/diary/e1/photo.png",
       mimeType: "image/png",
       width: 800,
       height: 600,

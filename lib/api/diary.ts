@@ -64,6 +64,8 @@ export interface DiaryPhoto {
   diaryEntryId: string;
   uploadedByUserId: string;
   storageKey: string;
+  /** Presigned S3 GET URL for viewing the photo; short-lived (expires in 15 minutes). */
+  url: string;
   mimeType: DiaryPhotoMimeType;
   width: number;
   height: number;

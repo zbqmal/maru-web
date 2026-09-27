@@ -11,17 +11,6 @@ export const createPhotoId = () =>
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-/** Builds a viewable URL for a diary photo from its S3 storage key. */
-export const getDiaryPhotoUrl = (storageKey: string): string => {
-  const baseUrl = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
-
-  if (!baseUrl) {
-    throw new Error("NEXT_PUBLIC_MEDIA_BASE_URL is required.");
-  }
-
-  return `${baseUrl.replace(/\/$/, "")}/${storageKey}`;
-};
-
 /** Reads the pixel dimensions of an in-browser image file before it's registered with the backend. */
 export const getImageDimensions = (file: File): Promise<ImageDimensions> =>
   new Promise((resolve, reject) => {

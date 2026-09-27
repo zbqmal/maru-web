@@ -1,5 +1,4 @@
 import { DiaryPhoto } from "@/lib/api/diary";
-import { getDiaryPhotoUrl } from "@/lib/utils/media.utils";
 import { cn } from "@/lib/utils/tailwind.utils";
 import { ImageOff, Loader2, X } from "lucide-react";
 import { useState } from "react";
@@ -48,7 +47,7 @@ export const PhotoThumbnail = ({
             )}
             {/* eslint-disable-next-line @next/next/no-img-element -- remote media served from a runtime-configured S3/CDN origin */}
             <img
-              src={getDiaryPhotoUrl(photo.storageKey)}
+              src={photo.url}
               alt={`다이어리 사진 ${index + 1}`}
               className={cn(
                 "h-full w-full object-cover transition-transform group-hover:scale-105",

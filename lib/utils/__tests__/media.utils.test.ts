@@ -1,34 +1,4 @@
-import { getDiaryPhotoUrl, getImageDimensions } from "@/lib/utils/media.utils";
-
-describe("getDiaryPhotoUrl", () => {
-  const originalEnv = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
-
-  afterEach(() => {
-    process.env.NEXT_PUBLIC_MEDIA_BASE_URL = originalEnv;
-  });
-
-  it("joins the media base URL and storage key", () => {
-    process.env.NEXT_PUBLIC_MEDIA_BASE_URL = "https://media.example.test";
-
-    expect(getDiaryPhotoUrl("diary-entries/e1/photos/photo.png")).toBe(
-      "https://media.example.test/diary-entries/e1/photos/photo.png"
-    );
-  });
-
-  it("strips a trailing slash from the base URL", () => {
-    process.env.NEXT_PUBLIC_MEDIA_BASE_URL = "https://media.example.test/";
-
-    expect(getDiaryPhotoUrl("photo.png")).toBe("https://media.example.test/photo.png");
-  });
-
-  it("throws when the media base URL is not configured", () => {
-    delete process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
-
-    expect(() => getDiaryPhotoUrl("photo.png")).toThrow(
-      "NEXT_PUBLIC_MEDIA_BASE_URL is required."
-    );
-  });
-});
+import { getImageDimensions } from "@/lib/utils/media.utils";
 
 describe("getImageDimensions", () => {
   const originalImage = global.Image;

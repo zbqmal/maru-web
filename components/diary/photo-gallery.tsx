@@ -5,7 +5,6 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Dialog, DialogHeader, DialogTitle, DialogClose, DialogBody } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils/tailwind.utils";
 import type { DiaryPhoto } from "@/lib/api/diary";
-import { getDiaryPhotoUrl } from "@/lib/utils/media.utils";
 import { PhotoThumbnail } from "./photo-thumbnail";
 
 export interface PhotoGalleryProps {
@@ -84,7 +83,7 @@ const PhotoGallery = ({
               )}
               {/* eslint-disable-next-line @next/next/no-img-element -- remote media served from a runtime-configured S3/CDN origin */}
               <img
-                src={getDiaryPhotoUrl(selectedPhoto.storageKey)}
+                src={selectedPhoto.url}
                 alt={`다이어리 사진 ${(selectedIndex ?? 0) + 1}`}
                 className="max-h-[70vh] w-full rounded-lg object-contain"
               />

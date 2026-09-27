@@ -132,6 +132,7 @@ describe("diary api", () => {
       diaryEntryId: "e1",
       uploadedByUserId: "u1",
       storageKey: "diary-entries/e1/photos/photo.png",
+      url: "https://media.example.test/diary-entries/e1/photos/photo.png",
       mimeType: "image/png",
       width: 800,
       height: 600,

@@ -8,6 +8,7 @@ const makePhoto = (overrides: Partial<DiaryPhoto> = {}): DiaryPhoto => ({
   diaryEntryId: "e1",
   uploadedByUserId: "u1",
   storageKey: "diary-entries/e1/photos/photo.png",
+  url: "https://media.example.test/diary-entries/e1/photos/photo.png",
   mimeType: "image/png",
   width: 800,
   height: 600,
@@ -18,10 +19,6 @@ const makePhoto = (overrides: Partial<DiaryPhoto> = {}): DiaryPhoto => ({
 });
 
 describe("PhotoGallery", () => {
-  beforeEach(() => {
-    process.env.NEXT_PUBLIC_MEDIA_BASE_URL = "https://media.example.test";
-  });
-
   it("renders nothing when there are no photos", () => {
     const { container } = render(<PhotoGallery photos={[]} />);
     expect(container).toBeEmptyDOMElement();
@@ -29,8 +26,8 @@ describe("PhotoGallery", () => {
 
   it("renders a thumbnail per photo ordered by displayOrder", () => {
     const photos = [
-      makePhoto({ id: "p2", displayOrder: 1, storageKey: "photo-2.png" }),
-      makePhoto({ id: "p1", displayOrder: 0, storageKey: "photo-1.png" }),
+      makePhoto({ id: "p2", displayOrder: 1, url: "https://media.example.test/photo-2.png" }),
+      makePhoto({ id: "p1", displayOrder: 0, url: "https://media.example.test/photo-1.png" }),
     ];
     render(<PhotoGallery photos={photos} />);
 
@@ -53,8 +50,8 @@ describe("PhotoGallery", () => {
   it("opens a lightbox with next/prev navigation when a thumbnail is clicked", async () => {
     const user = userEvent.setup();
     const photos = [
-      makePhoto({ id: "p1", displayOrder: 0, storageKey: "photo-1.png" }),
-      makePhoto({ id: "p2", displayOrder: 1, storageKey: "photo-2.png" }),
+      makePhoto({ id: "p1", displayOrder: 0, url: "https://media.example.test/photo-1.png" }),
+      makePhoto({ id: "p2", displayOrder: 1, url: "https://media.example.test/photo-2.png" }),
     ];
     render(<PhotoGallery photos={photos} />);
 

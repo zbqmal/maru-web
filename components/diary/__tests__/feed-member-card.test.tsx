@@ -127,7 +127,6 @@ describe("FeedMemberCard", () => {
   });
 
   it("renders a photo gallery when the entry has photos", () => {
-    process.env.NEXT_PUBLIC_MEDIA_BASE_URL = "https://media.example.test";
     const memberWithPhotos: FeedMemberEntry = {
       ...partialEntryMember,
       entry: {
@@ -138,6 +137,7 @@ describe("FeedMemberCard", () => {
             diaryEntryId: "e1",
             uploadedByUserId: "u1",
             storageKey: "photo-1.png",
+            url: "https://media.example.test/photo-1.png",
             mimeType: "image/png",
             width: 800,
             height: 600,
@@ -158,7 +158,6 @@ describe("FeedMemberCard", () => {
   });
 
   it("shows a remove button for photos only when canRemovePhotos is true", async () => {
-    process.env.NEXT_PUBLIC_MEDIA_BASE_URL = "https://media.example.test";
     const onRemovePhoto = jest.fn();
     const memberWithPhotos: FeedMemberEntry = {
       ...partialEntryMember,
@@ -170,6 +169,7 @@ describe("FeedMemberCard", () => {
             diaryEntryId: "e1",
             uploadedByUserId: "u1",
             storageKey: "photo-1.png",
+            url: "https://media.example.test/photo-1.png",
             mimeType: "image/png",
             width: 800,
             height: 600,

@@ -170,12 +170,12 @@ describe("GroupDailyFeed", () => {
   });
 
   it("allows the current user to remove their own photo but not another member's", async () => {
-    process.env.NEXT_PUBLIC_MEDIA_BASE_URL = "https://media.example.test";
     const photo = {
       id: "p1",
       diaryEntryId: "e1",
       uploadedByUserId: "u1",
       storageKey: "photo-1.png",
+      url: "https://media.example.test/photo-1.png",
       mimeType: "image/png" as const,
       width: 800,
       height: 600,
