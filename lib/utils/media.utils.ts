@@ -1,4 +1,5 @@
 import { DiaryPhotoMimeType } from "../api/diary";
+import { ImageDimensions } from "../types/media.types";
 
 export const isDiaryPhotoMimeType = (mimeType: string): mimeType is DiaryPhotoMimeType =>
   mimeType === "image/jpeg" || mimeType === "image/png" || mimeType === "image/webp";
@@ -9,11 +10,6 @@ export const createPhotoId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-export interface ImageDimensions {
-  width: number;
-  height: number;
-}
 
 /** Builds a viewable URL for a diary photo from its S3 storage key. */
 export const getDiaryPhotoUrl = (storageKey: string): string => {

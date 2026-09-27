@@ -80,4 +80,3 @@ const FeedMemberCard = ({
 };
 
 export default FeedMemberCard;
-
