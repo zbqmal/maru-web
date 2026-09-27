@@ -10,3 +10,8 @@ export interface PhotoUploadState {
   storageKey?: string;
   error?: string;
 }
+
+export interface ImageDimensions {
+  width: number;
+  height: number;
+}

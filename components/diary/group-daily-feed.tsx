@@ -1,11 +1,14 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import EmptyState from "@/components/ui/empty-state";
 import ErrorState from "@/components/ui/error-state";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import FeedMemberCard from "@/components/diary/feed-member-card";
 import { useGroupDailyFeedQuery } from "@/hooks/use-group-daily-feed";
+import { useDeleteDiaryPhotoMutation } from "@/hooks/use-diary-photos";
+import { useCurrentUserQuery } from "@/hooks/use-current-user";
 
 export interface GroupDailyFeedProps {
   groupId: string;
@@ -15,6 +18,22 @@ export interface GroupDailyFeedProps {
 
 const GroupDailyFeed = ({ groupId, date, totalQuestions }: GroupDailyFeedProps) => {
   const { data, isLoading, isError, refetch } = useGroupDailyFeedQuery(groupId, date);
+  const { data: currentUser } = useCurrentUserQuery();
+  const deletePhotoMutation = useDeleteDiaryPhotoMutation(groupId, date);
+
+  // Photo view URLs are presigned and expire after 15 minutes. If an image fails to
+  // load (e.g. because its URL expired while the page was left open), refetch once to
+  // obtain freshly signed URLs. Reset the guard whenever new feed data arrives so a
+  // genuinely broken image doesn't trigger a refetch loop.
+  const hasAttemptedPhotoRefetch = useRef(false);
+  useEffect(() => {
+    hasAttemptedPhotoRefetch.current = false;
+  }, [data]);
+  const handlePhotoLoadError = () => {
+    if (hasAttemptedPhotoRefetch.current) return;
+    hasAttemptedPhotoRefetch.current = true;
+    void refetch();
+  };
 
   return (
     <Card className="mt-4">
@@ -40,7 +59,22 @@ const GroupDailyFeed = ({ groupId, date, totalQuestions }: GroupDailyFeedProps) 
           <ul aria-label="오늘의 기록 목록" className="flex flex-col gap-3">
             {data.members.map((memberEntry) => (
               <li key={memberEntry.userId}>
-                <FeedMemberCard memberEntry={memberEntry} totalQuestions={totalQuestions} />
+                <FeedMemberCard
+                  memberEntry={memberEntry}
+                  totalQuestions={totalQuestions}
+                  canRemovePhotos={!!currentUser && memberEntry.userId === currentUser.id}
+                  onRemovePhoto={(photoId) => {
+                    if (!memberEntry.entry) return;
+                    deletePhotoMutation.mutate({ diaryEntryId: memberEntry.entry.id, photoId });
+                  }}
+                  removingPhotoId={
+                    deletePhotoMutation.isPending &&
+                    deletePhotoMutation.variables?.diaryEntryId === memberEntry.entry?.id
+                      ? deletePhotoMutation.variables.photoId
+                      : null
+                  }
+                  onPhotoLoadError={handlePhotoLoadError}
+                />
               </li>
             ))}
           </ul>
@@ -51,3 +85,4 @@ const GroupDailyFeed = ({ groupId, date, totalQuestions }: GroupDailyFeedProps) 
 };
 
 export default GroupDailyFeed;
+

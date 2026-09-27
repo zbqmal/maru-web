@@ -1,15 +1,29 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils/tailwind.utils";
+import PhotoGallery from "@/components/diary/photo-gallery";
 import type { FeedMemberEntry } from "@/lib/api/diary";
 
 export interface FeedMemberCardProps {
   memberEntry: FeedMemberEntry;
   totalQuestions: number;
+  canRemovePhotos?: boolean;
+  onRemovePhoto?: (photoId: string) => void;
+  removingPhotoId?: string | null;
+  /** Called when a photo fails to load, e.g. an expired presigned URL; used to trigger a refetch. */
+  onPhotoLoadError?: () => void;
 }
 
-const FeedMemberCard = ({ memberEntry, totalQuestions }: FeedMemberCardProps) => {
+const FeedMemberCard = ({
+  memberEntry,
+  totalQuestions,
+  canRemovePhotos = false,
+  onRemovePhoto,
+  removingPhotoId = null,
+  onPhotoLoadError,
+}: FeedMemberCardProps) => {
   const { user, entry } = memberEntry;
   const answers = entry?.answers ?? [];
+  const photos = entry?.photos ?? [];
   const answeredCount = answers.length;
   const isCompleted = totalQuestions > 0 && answeredCount >= totalQuestions;
   const hasAnyAnswer = answeredCount > 0;
@@ -22,32 +36,47 @@ const FeedMemberCard = ({ memberEntry, totalQuestions }: FeedMemberCardProps) =>
         isCompleted ? "border-success/30 bg-surface" : "border-border bg-surface"
       )}
     >
-      <CardContent className="flex gap-10 p-4">
-        {/* Header */}
-        <div className="w-30 mb-3 flex items-start gap-2">
-          <span
-            aria-hidden="true"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary break-all"
-          >
-            {user.name.charAt(0)}
-          </span>
-          <span className="flex-1 pt-[5px] text-sm font-semibold text-foreground">{user.name}</span>
+      <CardContent className="flex flex-col gap-3 p-4">
+        <div className="flex gap-10">
+          {/* Header */}
+          <div className="w-30 mb-3 flex items-start gap-2">
+            <span
+              aria-hidden="true"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary break-all"
+            >
+              {user.name.charAt(0)}
+            </span>
+            <span className="flex-1 pt-[5px] text-sm font-semibold text-foreground">
+              {user.name}
+            </span>
+          </div>
+
+          {/* Body */}
+          {!hasAnyAnswer ? (
+            <p className="text-xs text-muted-foreground">아직 오늘의 기록을 남기지 않았어요.</p>
+          ) : (
+            <ul className="flex flex-col gap-2" aria-label={`${user.name}의 답변 목록`}>
+              {answers.map((answer) => (
+                <li key={answer.id} className="flex flex-col gap-2 py-1">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {answer.questionSnapshot}
+                  </span>
+                  <p className="text-sm text-foreground pl-2">{answer.body}</p>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
-        {/* Body */}
-        {!hasAnyAnswer ? (
-          <p className="text-xs text-muted-foreground">아직 오늘의 기록을 남기지 않았어요.</p>
-        ) : (
-          <ul className="flex flex-col gap-2" aria-label={`${user.name}의 답변 목록`}>
-            {answers.map((answer) => (
-              <li key={answer.id} className="flex flex-col gap-2 py-1">
-                <span className="text-xs font-medium text-muted-foreground">
-                  {answer.questionSnapshot}
-                </span>
-                <p className="text-sm text-foreground pl-2">{answer.body}</p>
-              </li>
-            ))}
-          </ul>
+        {photos.length > 0 && (
+          <PhotoGallery
+            photos={photos}
+            canRemove={canRemovePhotos}
+            onRemove={onRemovePhoto}
+            removingPhotoId={removingPhotoId}
+            onPhotoLoadError={onPhotoLoadError}
+            className="sm:pl-[104px]"
+          />
         )}
       </CardContent>
     </Card>
