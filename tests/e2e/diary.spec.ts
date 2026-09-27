@@ -511,6 +511,14 @@ test("group daily feed renders a photo gallery and allows the owner to remove a 
     ],
   };
 
+  const feedAfterDelete = {
+    ...feedWithPhotos,
+    members: [
+      { ...feedWithPhotos.members[0], entry: { ...feedWithPhotos.members[0].entry, photos: [] } },
+      feedWithPhotos.members[1],
+    ],
+  };
+
   await page.route(new RegExp(`http://${apiHostPattern}:3001/me$`), (route) =>
     route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify(user) })
   );
@@ -522,7 +530,7 @@ test("group daily feed renders a photo gallery and allows the owner to remove a 
     new RegExp(`http://${apiHostPattern}:3001/groups/g1/diary/feed\\?date=.*`),
     (route) => {
       feedRequestCount += 1;
-      const body = feedRequestCount === 1 ? feedWithPhotos : { ...feedWithPhotos, members: [feedWithPhotos.members[1]].concat({ ...feedWithPhotos.members[0], entry: { ...feedWithPhotos.members[0].entry, photos: [] } }) };
+      const body = feedRequestCount === 1 ? feedWithPhotos : feedAfterDelete;
       route.fulfill({ status: 200, headers: apiHeaders, body: JSON.stringify(body) });
     }
   );

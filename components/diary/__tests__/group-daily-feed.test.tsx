@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import GroupDailyFeed from "../group-daily-feed";
 import type { GroupDailyFeedResponse } from "@/lib/api/diary";
@@ -216,5 +216,41 @@ describe("GroupDailyFeed", () => {
     // 민수 (not the current user) cannot remove their photo.
     const minsuCard = screen.getByLabelText("민수의 오늘 기록");
     expect(minsuCard.querySelector('button[aria-label="사진 1 삭제"]')).not.toBeInTheDocument();
+  });
+
+  it("refetches once when a photo fails to load, but does not loop on repeated failures", () => {
+    const photo = {
+      id: "p1",
+      diaryEntryId: "e1",
+      uploadedByUserId: "u1",
+      storageKey: "photo-1.png",
+      url: "https://media.example.test/photo-1.png",
+      mimeType: "image/png" as const,
+      width: 800,
+      height: 600,
+      displayOrder: 0,
+      sizeBytes: 1024,
+      createdAt: "2026-08-26T00:00:00.000Z",
+    };
+    mockFeedResult = {
+      data: {
+        date: "2026-08-26",
+        members: [
+          { ...feedData.members[0], entry: { ...feedData.members[0].entry!, photos: [photo] } },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      refetch: mockRefetch,
+    };
+
+    render(<GroupDailyFeed groupId="g1" date="2026-08-26" totalQuestions={2} />);
+
+    const image = screen.getByAltText("다이어리 사진 1");
+    fireEvent.error(image);
+    fireEvent.error(image);
+    fireEvent.error(image);
+
+    expect(mockRefetch).toHaveBeenCalledTimes(1);
   });
 });

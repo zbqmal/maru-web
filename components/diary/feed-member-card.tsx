@@ -9,6 +9,8 @@ export interface FeedMemberCardProps {
   canRemovePhotos?: boolean;
   onRemovePhoto?: (photoId: string) => void;
   removingPhotoId?: string | null;
+  /** Called when a photo fails to load, e.g. an expired presigned URL; used to trigger a refetch. */
+  onPhotoLoadError?: () => void;
 }
 
 const FeedMemberCard = ({
@@ -17,6 +19,7 @@ const FeedMemberCard = ({
   canRemovePhotos = false,
   onRemovePhoto,
   removingPhotoId = null,
+  onPhotoLoadError,
 }: FeedMemberCardProps) => {
   const { user, entry } = memberEntry;
   const answers = entry?.answers ?? [];
@@ -71,6 +74,7 @@ const FeedMemberCard = ({
             canRemove={canRemovePhotos}
             onRemove={onRemovePhoto}
             removingPhotoId={removingPhotoId}
+            onPhotoLoadError={onPhotoLoadError}
             className="sm:pl-[104px]"
           />
         )}

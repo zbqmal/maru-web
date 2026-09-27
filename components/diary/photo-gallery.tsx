@@ -14,6 +14,12 @@ export interface PhotoGalleryProps {
   onRemove?: (photoId: string) => void;
   /** The id of a photo currently being removed, used to show a busy state. */
   removingPhotoId?: string | null;
+  /**
+   * Called when a photo thumbnail or the lightbox image fails to load, e.g. because
+   * the backend's presigned view URL (valid for 15 minutes) has expired. Callers
+   * should refetch the underlying query to obtain a freshly signed URL.
+   */
+  onPhotoLoadError?: () => void;
   className?: string;
 }
 
@@ -22,6 +28,7 @@ const PhotoGallery = ({
   canRemove = false,
   onRemove,
   removingPhotoId = null,
+  onPhotoLoadError,
   className,
 }: PhotoGalleryProps) => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -29,7 +36,8 @@ const PhotoGallery = ({
   if (photos.length === 0) return null;
 
   const orderedPhotos = [...photos].sort((a, b) => a.displayOrder - b.displayOrder);
-  const selectedPhoto = selectedIndex !== null ? orderedPhotos[selectedIndex] : null;
+  const selectedPhoto =
+    selectedIndex !== null ? (orderedPhotos[selectedIndex] ?? null) : null;
 
   const showPrev = () =>
     setSelectedIndex((prev) =>
@@ -53,6 +61,7 @@ const PhotoGallery = ({
           isRemoving={removingPhotoId === photo.id}
           onSelect={() => setSelectedIndex(index)}
           onRemove={(photoId) => onRemove?.(photoId)}
+          onLoadError={onPhotoLoadError}
         />
       ))}
 
@@ -81,11 +90,12 @@ const PhotoGallery = ({
                   <ChevronLeft className="h-5 w-5" aria-hidden="true" />
                 </button>
               )}
-              {/* eslint-disable-next-line @next/next/no-img-element -- remote media served from a runtime-configured S3/CDN origin */}
+              {/* eslint-disable-next-line @next/next/no-img-element -- short-lived presigned S3 URL from the backend, unsuitable for next/image's remote-pattern allowlist */}
               <img
                 src={selectedPhoto.url}
                 alt={`다이어리 사진 ${(selectedIndex ?? 0) + 1}`}
                 className="max-h-[70vh] w-full rounded-lg object-contain"
+                onError={onPhotoLoadError}
               />
               {orderedPhotos.length > 1 && (
                 <button

@@ -112,4 +112,30 @@ describe("PhotoGallery", () => {
 
     expect(screen.getByRole("button", { name: "사진 1 삭제" })).toBeDisabled();
   });
+
+  it("calls onPhotoLoadError when a thumbnail fails to load", () => {
+    const onPhotoLoadError = jest.fn();
+    render(<PhotoGallery photos={[makePhoto()]} onPhotoLoadError={onPhotoLoadError} />);
+
+    fireEvent.error(screen.getByAltText("다이어리 사진 1"));
+
+    expect(onPhotoLoadError).toHaveBeenCalledTimes(1);
+  });
+
+  it("closes the lightbox instead of crashing if the selected photo disappears", async () => {
+    const user = userEvent.setup();
+    const photos = [
+      makePhoto({ id: "p1", displayOrder: 0 }),
+      makePhoto({ id: "p2", displayOrder: 1 }),
+    ];
+    const { rerender } = render(<PhotoGallery photos={photos} />);
+
+    await user.click(screen.getByRole("button", { name: "사진 2 크게 보기" }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+    // Simulate the selected (second) photo being removed out from under the open lightbox.
+    rerender(<PhotoGallery photos={[photos[0]]} />);
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
 });

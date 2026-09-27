@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import EmptyState from "@/components/ui/empty-state";
 import ErrorState from "@/components/ui/error-state";
@@ -19,6 +20,20 @@ const GroupDailyFeed = ({ groupId, date, totalQuestions }: GroupDailyFeedProps) 
   const { data, isLoading, isError, refetch } = useGroupDailyFeedQuery(groupId, date);
   const { data: currentUser } = useCurrentUserQuery();
   const deletePhotoMutation = useDeleteDiaryPhotoMutation(groupId, date);
+
+  // Photo view URLs are presigned and expire after 15 minutes. If an image fails to
+  // load (e.g. because its URL expired while the page was left open), refetch once to
+  // obtain freshly signed URLs. Reset the guard whenever new feed data arrives so a
+  // genuinely broken image doesn't trigger a refetch loop.
+  const hasAttemptedPhotoRefetch = useRef(false);
+  useEffect(() => {
+    hasAttemptedPhotoRefetch.current = false;
+  }, [data]);
+  const handlePhotoLoadError = () => {
+    if (hasAttemptedPhotoRefetch.current) return;
+    hasAttemptedPhotoRefetch.current = true;
+    void refetch();
+  };
 
   return (
     <Card className="mt-4">
@@ -58,6 +73,7 @@ const GroupDailyFeed = ({ groupId, date, totalQuestions }: GroupDailyFeedProps) 
                       ? deletePhotoMutation.variables.photoId
                       : null
                   }
+                  onPhotoLoadError={handlePhotoLoadError}
                 />
               </li>
             ))}

@@ -10,6 +10,8 @@ interface PhotoThumbnailProps {
   isRemoving: boolean;
   onSelect: () => void;
   onRemove: (photoId: string) => void;
+  /** Called when the thumbnail image fails to load, e.g. an expired presigned URL. */
+  onLoadError?: () => void;
 }
 
 export const PhotoThumbnail = ({
@@ -19,6 +21,7 @@ export const PhotoThumbnail = ({
   isRemoving,
   onSelect,
   onRemove,
+  onLoadError,
 }: PhotoThumbnailProps) => {
   const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
 
@@ -45,7 +48,7 @@ export const PhotoThumbnail = ({
                 />
               </div>
             )}
-            {/* eslint-disable-next-line @next/next/no-img-element -- remote media served from a runtime-configured S3/CDN origin */}
+            {/* eslint-disable-next-line @next/next/no-img-element -- short-lived presigned S3 URL from the backend, unsuitable for next/image's remote-pattern allowlist */}
             <img
               src={photo.url}
               alt={`다이어리 사진 ${index + 1}`}
@@ -54,7 +57,10 @@ export const PhotoThumbnail = ({
                 status === "loaded" ? "opacity-100" : "opacity-0"
               )}
               onLoad={() => setStatus("loaded")}
-              onError={() => setStatus("error")}
+              onError={() => {
+                setStatus("error");
+                onLoadError?.();
+              }}
             />
           </>
         )}
