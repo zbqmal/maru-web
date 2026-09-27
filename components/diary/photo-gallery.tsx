@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Dialog, DialogHeader, DialogTitle, DialogClose, DialogBody } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils/tailwind.utils";
@@ -32,6 +32,7 @@ const PhotoGallery = ({
   className,
 }: PhotoGalleryProps) => {
   const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(null);
+  const dialogTitleId = useId();
 
   if (photos.length === 0) return null;
 
@@ -76,12 +77,12 @@ const PhotoGallery = ({
         open={selectedPhoto !== null}
         onClose={() => setSelectedPhotoId(null)}
         className="max-w-2xl bg-transparent p-0 shadow-none"
-        titleId="photo-gallery-dialog-title"
+        titleId={dialogTitleId}
       >
         {selectedPhoto && (
           <div className="flex flex-col gap-3">
             <DialogHeader className="px-1">
-              <DialogTitle id="photo-gallery-dialog-title" className="sr-only">
+              <DialogTitle id={dialogTitleId} className="sr-only">
                 사진 {selectedIndex + 1} / {orderedPhotos.length}
               </DialogTitle>
               <DialogClose onClose={() => setSelectedPhotoId(null)} />

@@ -155,4 +155,59 @@ describe("PhotoGallery", () => {
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
+
+  it("keeps the lightbox on the same photo when the list is reordered", async () => {
+    const user = userEvent.setup();
+    const photos = [
+      makePhoto({ id: "p1", displayOrder: 0, url: "https://media.example.test/photo-1.png" }),
+      makePhoto({ id: "p2", displayOrder: 1, url: "https://media.example.test/photo-2.png" }),
+    ];
+    const { rerender } = render(<PhotoGallery photos={photos} />);
+
+    await user.click(screen.getByRole("button", { name: "사진 1 크게 보기" }));
+    expect(within(screen.getByRole("dialog")).getByRole("img")).toHaveAttribute(
+      "src",
+      "https://media.example.test/photo-1.png"
+    );
+
+    // Reorder so p1 is now second; the lightbox should still show p1, not whatever is now at index 0.
+    rerender(
+      <PhotoGallery
+        photos={[
+          { ...photos[1], displayOrder: 0 },
+          { ...photos[0], displayOrder: 1 },
+        ]}
+      />
+    );
+
+    expect(within(screen.getByRole("dialog")).getByRole("img")).toHaveAttribute(
+      "src",
+      "https://media.example.test/photo-1.png"
+    );
+  });
+
+  it("uses a unique dialog title id per instance to avoid duplicate ids on the page", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <PhotoGallery photos={[makePhoto({ id: "p1" })]} />
+        <PhotoGallery photos={[makePhoto({ id: "p2" })]} />
+      </>
+    );
+
+    const openButtons = screen.getAllByRole("button", { name: "사진 1 크게 보기" });
+    await user.click(openButtons[0]);
+    await user.click(openButtons[1]);
+
+    const dialogs = screen.getAllByRole("dialog");
+    expect(dialogs).toHaveLength(2);
+    const labelledByIds = dialogs.map((dialog) => dialog.getAttribute("aria-labelledby"));
+
+    expect(labelledByIds[0]).toBeTruthy();
+    expect(labelledByIds[1]).toBeTruthy();
+    expect(labelledByIds[0]).not.toEqual(labelledByIds[1]);
+    labelledByIds.forEach((id) => {
+      expect(document.getElementById(id!)).toBeInTheDocument();
+    });
+  });
 });
