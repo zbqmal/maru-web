@@ -85,7 +85,7 @@ export interface RegisterDiaryPhotoInput {
 export interface FeedMemberUser {
   id: string;
   name: string;
-  profileImageKey: Record<string, unknown> | null;
+  profileImageKey: string | null;
 }
 
 export interface FeedEntry {

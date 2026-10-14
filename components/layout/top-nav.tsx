@@ -10,6 +10,7 @@ import { logout } from "@/lib/api/auth";
 import { getErrorMessage } from "@/lib/api/errors";
 import UserMenuItem from "./user-menu-item";
 import GroupSelector from "../groups/group-selector";
+import { getProfileImageUrl } from "@/lib/utils/profile-image.utils";
 
 type TopNavProps = {
   currentUser: AuthUser;
@@ -59,7 +60,12 @@ const TopNav = ({ currentUser }: TopNavProps) => {
             onClick={() => setUserMenuOpen((v) => !v)}
             className="flex items-center gap-1.5 rounded-full px-2 py-1 hover:bg-surface-muted"
           >
-            <Avatar fallback={currentUser.name} size="sm" />
+            <Avatar
+              key={currentUser.profileImageKey}
+              src={getProfileImageUrl(currentUser.profileImageKey)}
+              fallback={currentUser.name}
+              size="sm"
+            />
             <span className="text-sm font-medium text-foreground">{currentUser.name}</span>
             <ChevronDown className="h-3.5 w-3.5 text-muted" />
           </button>

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Sidebar from "../sidebar";
@@ -107,6 +107,36 @@ describe("Sidebar", () => {
     renderWithQuery(<Sidebar currentUser={mockCurrentUser} />);
     expect(screen.getByText("홍길동 (나)")).toBeInTheDocument();
     expect(screen.getByText("다연")).toBeInTheDocument();
+  });
+
+  it("uses the latest current-user image rather than a stale group image, and shows other member images", () => {
+    const originalBase = process.env.NEXT_PUBLIC_PROFILE_IMAGE_BASE_URL;
+    process.env.NEXT_PUBLIC_PROFILE_IMAGE_BASE_URL = "https://cdn.example.test";
+    try {
+      mockActiveGroupQueryResult = {
+        ...mockActiveGroupQueryResult,
+        activeGroup: {
+          ...mockGroup,
+          memberships: mockGroup.memberships.map((member) => ({
+            ...member,
+            user: { ...member.user, profileImageKey: `profiles/${member.userId}/old.png` },
+          })),
+        },
+      };
+      const { rerender } = renderWithQuery(
+        <Sidebar currentUser={{ ...mockCurrentUser, profileImageKey: "profiles/u1/new.png" }} />,
+      );
+      expect(within(screen.getByText("홍길동 (나)").parentElement!).getByAltText(""))
+        .toHaveAttribute("src", "https://cdn.example.test/profiles/u1/new.png");
+      expect(within(screen.getByText("다연").parentElement!).getByAltText(""))
+        .toHaveAttribute("src", "https://cdn.example.test/profiles/u2/old.png");
+      rerender(<QueryClientProvider client={new QueryClient()}><Sidebar currentUser={mockCurrentUser} /></QueryClientProvider>);
+      expect(within(screen.getByText("홍길동 (나)").parentElement!).queryByAltText(""))
+        .not.toBeInTheDocument();
+    } finally {
+      if (originalBase === undefined) delete process.env.NEXT_PUBLIC_PROFILE_IMAGE_BASE_URL;
+      else process.env.NEXT_PUBLIC_PROFILE_IMAGE_BASE_URL = originalBase;
+    }
   });
 
   it("renders the leader crown icon for the group leader", () => {

@@ -90,7 +90,7 @@ test("profile page loads profile data and supports updates", async ({ context, p
 
   await expect(page.getByRole("heading", { name: "내 프로필" })).toBeVisible();
   await expect(page.getByLabel("이메일")).toHaveValue("user@example.com");
-  await expect(page.getByRole("button", { name: "이미지 변경 (준비 중)" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "이미지 변경" })).toBeEnabled();
 
   await page.getByLabel("이름").fill("김마루");
   await page.getByLabel("생일").fill("1999-01-01");
