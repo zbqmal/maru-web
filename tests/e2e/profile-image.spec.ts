@@ -170,12 +170,11 @@ test("profile image validation is accessible on a narrow screen", async ({ conte
   );
   await expect(page.getByRole("button", { name: "이미지 저장" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "이미지 변경" })).toBeEnabled();
-  await page.getByRole("button", { name: "이미지 변경" }).focus();
-  const chooserPromise = page.waitForEvent("filechooser");
-  await page.keyboard.press("Enter");
-  await (
-    await chooserPromise
-  ).setFiles({ name: "valid.png", mimeType: "image/png", buffer: imageBytes });
+  const [chooser] = await Promise.all([
+    page.waitForEvent("filechooser"),
+    page.getByRole("button", { name: "이미지 변경" }).press("Enter"),
+  ]);
+  await chooser.setFiles({ name: "valid.png", mimeType: "image/png", buffer: imageBytes });
   await expect(page.getByRole("button", { name: "이미지 저장" })).toBeVisible();
   await expect(section.getByRole("alert")).toHaveCount(0);
 });

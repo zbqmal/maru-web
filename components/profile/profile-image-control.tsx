@@ -65,7 +65,11 @@ const ProfileImageControl = ({
       await uploadFileToPresignedUrl(upload.uploadUrl, file, ({ percent }) => setProgress(percent));
       return updateProfileImage({ storageKey: upload.storageKey, mimeType: file.type });
     },
-    onSuccess: (updated, action) => {
+    onSuccess: async (updated, action) => {
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey: PROFILE_QUERY_KEY }),
+        queryClient.cancelQueries({ queryKey: CURRENT_USER_QUERY_KEY }),
+      ]);
       queryClient.setQueryData(PROFILE_QUERY_KEY, updated);
       queryClient.setQueryData(CURRENT_USER_QUERY_KEY, updated);
       void queryClient.invalidateQueries({ queryKey: GROUPS_QUERY_KEY });

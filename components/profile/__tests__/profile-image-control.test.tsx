@@ -5,6 +5,7 @@ import ProfileForm from "@/app/(authenticated)/profile/profile-form";
 import { PROFILE_QUERY_KEY } from "../profile-image-control";
 import type { Profile } from "@/lib/api/profile";
 import { CURRENT_USER_QUERY_KEY } from "@/lib/auth/session";
+import { getCurrentUser } from "@/lib/api/auth";
 
 class UploadRequest {
   static latest: UploadRequest;
@@ -170,6 +171,61 @@ describe("profile image integration", () => {
     expect(name).toHaveValue("수정 중인 이름");
     expect(serverProfile.name).toBe("마루");
   });
+
+  it.each(["upload", "remove"])(
+    "prevents an older background refetch overwriting a successful %s",
+    async (action) => {
+      const { user } = await setup();
+      if (action === "upload") await selectImage(user);
+      const previousFetch = global.fetch;
+      const releases: (() => void)[] = [];
+      const oldProfile = { ...serverProfile };
+      global.fetch = jest.fn((url: RequestInfo | URL, options?: RequestInit) => {
+        const path = new URL(url.toString()).pathname;
+        if ((path === "/profile" || path === "/me") && !options?.method) {
+          return new Promise<Response>((resolve) => {
+            releases.push(() =>
+              resolve({
+                ok: true,
+                status: 200,
+                headers: new Headers({ "content-type": "application/json" }),
+                json: async () => oldProfile,
+              } as Response)
+            );
+          });
+        }
+        return previousFetch(url, options);
+      });
+      const profileRefetch = queryClient.refetchQueries({ queryKey: PROFILE_QUERY_KEY });
+      const userRefetch = queryClient
+        .fetchQuery({
+          queryKey: CURRENT_USER_QUERY_KEY,
+          queryFn: getCurrentUser,
+        })
+        .catch(() => undefined);
+      await waitFor(() => expect(releases).toHaveLength(2));
+
+      if (action === "upload") {
+        await user.click(screen.getByRole("button", { name: "이미지 저장" }));
+        await screen.findByText("프로필 이미지가 저장되었어요.");
+      } else {
+        await user.click(screen.getByRole("button", { name: "이미지 삭제" }));
+        await user.click(screen.getByRole("button", { name: "삭제 확인" }));
+        await screen.findByText("프로필 이미지가 삭제되었어요.");
+      }
+      await act(async () => {
+        releases.forEach((release) => release());
+        await Promise.all([profileRefetch, userRefetch]);
+      });
+      const expectedKey = action === "upload" ? "profiles/1/new-1.png" : null;
+      expect(queryClient.getQueryData<Profile>(PROFILE_QUERY_KEY)?.profileImageKey).toBe(
+        expectedKey
+      );
+      expect(queryClient.getQueryData<Profile>(CURRENT_USER_QUERY_KEY)?.profileImageKey).toBe(
+        expectedKey
+      );
+    }
+  );
 
   it("renders the saved image, previews replacements, cancels and releases object URLs", async () => {
     const { user, unmount } = await setup();
