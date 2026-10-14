@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import GroupDailyFeed from "../group-daily-feed";
 import type { GroupDailyFeedResponse } from "@/lib/api/diary";
@@ -18,6 +18,20 @@ let mockFeedResult: {
 
 jest.mock("@/hooks/use-group-daily-feed", () => ({
   useGroupDailyFeedQuery: () => mockFeedResult,
+}));
+
+const mockDeletePhotoMutate = jest.fn();
+
+jest.mock("@/hooks/use-current-user", () => ({
+  useCurrentUserQuery: () => ({ data: { id: "u1", email: "leader@example.com", name: "리더" } }),
+}));
+
+jest.mock("@/hooks/use-diary-photos", () => ({
+  useDeleteDiaryPhotoMutation: () => ({
+    mutate: mockDeletePhotoMutate,
+    isPending: false,
+    variables: undefined,
+  }),
 }));
 
 const feedData: GroupDailyFeedResponse = {
@@ -153,5 +167,90 @@ describe("GroupDailyFeed", () => {
   it("renders the feed list with accessible label", () => {
     render(<GroupDailyFeed groupId="g1" date="2026-08-26" totalQuestions={2} />);
     expect(screen.getByRole("list", { name: "오늘의 기록 목록" })).toBeInTheDocument();
+  });
+
+  it("allows the current user to remove their own photo but not another member's", async () => {
+    const photo = {
+      id: "p1",
+      diaryEntryId: "e1",
+      uploadedByUserId: "u1",
+      storageKey: "photo-1.png",
+      url: "https://media.example.test/photo-1.png",
+      mimeType: "image/png" as const,
+      width: 800,
+      height: 600,
+      displayOrder: 0,
+      sizeBytes: 1024,
+      createdAt: "2026-08-26T00:00:00.000Z",
+    };
+    mockFeedResult = {
+      data: {
+        date: "2026-08-26",
+        members: [
+          { ...feedData.members[0], entry: { ...feedData.members[0].entry!, photos: [photo] } },
+          {
+            ...feedData.members[2],
+            entry: {
+              ...feedData.members[2].entry!,
+              photos: [{ ...photo, id: "p2", diaryEntryId: "e3", uploadedByUserId: "u3" }],
+            },
+          },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      refetch: mockRefetch,
+    };
+
+    render(<GroupDailyFeed groupId="g1" date="2026-08-26" totalQuestions={2} />);
+
+    // 리더 (current user) can remove their own photo.
+    const leaderCard = screen.getByLabelText("리더의 오늘 기록");
+    const removeButton = leaderCard.querySelector('button[aria-label="사진 1 삭제"]');
+    expect(removeButton).toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.click(removeButton!);
+    expect(mockDeletePhotoMutate).toHaveBeenCalledWith({ diaryEntryId: "e1", photoId: "p1" });
+
+    // 민수 (not the current user) cannot remove their photo.
+    const minsuCard = screen.getByLabelText("민수의 오늘 기록");
+    expect(minsuCard.querySelector('button[aria-label="사진 1 삭제"]')).not.toBeInTheDocument();
+  });
+
+  it("refetches once when a photo fails to load, but does not loop on repeated failures", () => {
+    const photo = {
+      id: "p1",
+      diaryEntryId: "e1",
+      uploadedByUserId: "u1",
+      storageKey: "photo-1.png",
+      url: "https://media.example.test/photo-1.png",
+      mimeType: "image/png" as const,
+      width: 800,
+      height: 600,
+      displayOrder: 0,
+      sizeBytes: 1024,
+      createdAt: "2026-08-26T00:00:00.000Z",
+    };
+    mockFeedResult = {
+      data: {
+        date: "2026-08-26",
+        members: [
+          { ...feedData.members[0], entry: { ...feedData.members[0].entry!, photos: [photo] } },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      refetch: mockRefetch,
+    };
+
+    render(<GroupDailyFeed groupId="g1" date="2026-08-26" totalQuestions={2} />);
+
+    const image = screen.getByAltText("다이어리 사진 1");
+    fireEvent.error(image);
+    fireEvent.error(image);
+    fireEvent.error(image);
+
+    expect(mockRefetch).toHaveBeenCalledTimes(1);
   });
 });
