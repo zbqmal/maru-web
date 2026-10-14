@@ -9,6 +9,7 @@ import Avatar from "@/components/ui/avatar";
 import type { AuthUser } from "@/lib/api/auth";
 import { useActiveGroupQuery } from "@/hooks/use-groups";
 import InviteMemberDialog from "@/components/group-invitations/invite-member-dialog";
+import { getProfileImageUrl } from "@/lib/utils/profile-image.utils";
 
 const NAV_ITEMS = [
   { href: "/diary", label: "오늘의 다이어리", icon: Home },
@@ -30,7 +31,9 @@ const Sidebar = ({ currentUser }: SidebarProps) => {
         id: m.id,
         userId: m.userId,
         displayName: m.user.name,
-        avatarUrl: null,
+        avatarUrl: getProfileImageUrl(
+          m.userId === currentUser.id ? currentUser.profileImageKey : m.user.profileImageKey
+        ),
         isLeader: m.role === "LEADER",
         isSelf: m.userId === currentUser.id,
       }))
@@ -105,7 +108,7 @@ const Sidebar = ({ currentUser }: SidebarProps) => {
             <ul className="flex flex-col gap-2" aria-label="그룹 멤버 목록">
               {members.map((m) => (
                 <li key={m.id} className="flex items-center gap-2 text-sm text-foreground">
-                  <Avatar fallback={m.displayName} size="sm" />
+                  <Avatar key={m.avatarUrl} src={m.avatarUrl} fallback={m.displayName} size="sm" />
                   <span className="truncate">
                     {m.displayName}
                     {m.isSelf && " (나)"}

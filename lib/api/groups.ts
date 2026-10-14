@@ -3,7 +3,7 @@ import { apiRequest } from "@/lib/api/client";
 export interface GroupMemberUser {
   id: string;
   name: string;
-  profileImageKey: Record<string, unknown> | null;
+  profileImageKey: string | null;
 }
 
 export type GroupMemberRole = "LEADER" | "MEMBER";

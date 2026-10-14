@@ -13,7 +13,9 @@ import { getProfile, updateProfileBirthday, updateProfileName } from "@/lib/api/
 
 const mockGetProfile = getProfile as jest.MockedFunction<typeof getProfile>;
 const mockUpdateProfileName = updateProfileName as jest.MockedFunction<typeof updateProfileName>;
-const mockUpdateProfileBirthday = updateProfileBirthday as jest.MockedFunction<typeof updateProfileBirthday>;
+const mockUpdateProfileBirthday = updateProfileBirthday as jest.MockedFunction<
+  typeof updateProfileBirthday
+>;
 
 const profileFixture = {
   id: "1",
@@ -36,7 +38,7 @@ const renderProfileForm = () => {
   return render(
     <QueryClientProvider client={queryClient}>
       <ProfileForm />
-    </QueryClientProvider>,
+    </QueryClientProvider>
   );
 };
 
@@ -54,10 +56,10 @@ describe("ProfileForm", () => {
     expect(screen.getByDisplayValue("1995-10-08")).toBeInTheDocument();
   });
 
-  it("keeps profile image control disabled", async () => {
+  it("enables profile image selection", async () => {
     renderProfileForm();
 
-    expect(await screen.findByRole("button", { name: "이미지 변경 (준비 중)" })).toBeDisabled();
+    expect(await screen.findByRole("button", { name: "이미지 변경" })).toBeEnabled();
   });
 
   it("updates changed name and birthday and shows success message", async () => {
@@ -112,5 +114,25 @@ describe("ProfileForm", () => {
     await user.click(screen.getByRole("button", { name: "저장하기" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("프로필 수정에 실패했습니다.");
+  });
+
+  it("disables image changes while profile details are being saved", async () => {
+    const user = userEvent.setup();
+    let finishSave!: (profile: typeof profileFixture) => void;
+    mockUpdateProfileName.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finishSave = resolve;
+        })
+    );
+    renderProfileForm();
+    const name = await screen.findByLabelText("이름");
+    await user.clear(name);
+    await user.type(name, "새 이름");
+    await user.click(screen.getByRole("button", { name: "저장하기" }));
+    expect(screen.getByRole("button", { name: "이미지 변경" })).toBeDisabled();
+    finishSave({ ...profileFixture, name: "새 이름" });
+    await screen.findByText("프로필이 저장되었어요.");
+    expect(screen.getByRole("button", { name: "이미지 변경" })).toBeEnabled();
   });
 });
